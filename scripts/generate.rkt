@@ -1,11 +1,11 @@
 #lang racket
 
+(provide generate)
+
 (require webapp/scripts/generate/util)
+(require webapp/scripts/migrate)
 
-(module+ main
-  (define args
-    (vector->list (current-command-line-arguments)))
-
+(define (generate . args)
   (when (empty? args)
     (raise "You must supply a model name and list of fields"))
 
@@ -26,8 +26,6 @@
   (maybe-create-dir (test-dir name))
   (maybe-create-file (test-main.rkt name) 
                      (test-file-template name fields))
-
-  (require webapp/scripts/migrate)
 
   (create-migration name
                     (thunk

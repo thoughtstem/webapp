@@ -45,6 +45,16 @@
          file/glob
          (only-in db query-exec))
 
+(define (dynamic-find-base-function f-name)
+  ;A better approach in general would be to make
+  ;  has-many, has-one, and belongs-to all
+  ;  register their model files in some lookup table so that we can dynamically find them later -- and we don't have to assume all models are in the main project.
+  (dynamic-require
+    (string->symbol 
+      (~a (pkg-name) "/models/base"))
+    f-name))
+
+
 (define (all-models-plural)
   ;If we want a singular version, we should probably track them as define-schema is used,
   ;  rather than assuming that the file structure is some kind of source of truth (even though is sort of is for now)
@@ -178,12 +188,6 @@
            (sequence->list s)
 
            ))]))
-
-(define (dynamic-find-base-function f-name)
-  (dynamic-require
-    (string->symbol 
-      (~a (pkg-name) "/models/base"))
-    f-name))
 
 (define-syntax (belongs-to stx)
   (syntax-parse stx

@@ -13,6 +13,8 @@
          webapp/db/util
          webapp/models/util)
 
+(load-current-env!)
+
 (define-syntax-rule (tests exp ...)
   (module+ test
     (parameterize ([env "test"])

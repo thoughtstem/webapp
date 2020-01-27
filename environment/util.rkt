@@ -9,9 +9,10 @@
          db-port
          db-name
          db-user
-         db-password)
+         db-password
+         load-current-env!)
 
-(require db)
+(require db file/glob)
 
 (define (environment-is? s)
   (define e
@@ -30,13 +31,9 @@
     "my_app"))
 
 ;Name of the racket package containing the app 
-(define pkg-name 
-  ;Another possibility is to set this based on what's at the root of the docker container.    
-  (make-parameter
-    (last 
-      (string-split
-        (~a (current-directory))
-        "/"))))
+(define (pkg-name) 
+  ;Very much assumes we are in a docker container and that the web app is at the filesystem root "/"
+  (~a (second (explode-path (first (glob "/*/info.rkt"))))))
 
 (define (db-host)
   (or 
@@ -68,4 +65,16 @@
 
   ;TODO: Pooling and virtual connections.
   last-connection)
+
+
+(define (load-current-env!)
+  (with-handlers ([exn:fail? 
+                    (thunk* 
+                      (displayln "No current environment/main.rkt file found"))])
+                 (dynamic-require 
+                   (string->symbol
+                     (~a 
+                       (pkg-name)
+                       '/environment/main))  
+                   #f)))
 

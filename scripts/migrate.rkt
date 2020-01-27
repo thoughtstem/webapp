@@ -18,8 +18,7 @@
       (begin 
         (after)
         (displayln-color 'green  "Migration created"))     
-      (displayln-color 'yellow "Migration exists")))
-  )
+      (displayln-color 'yellow "Migration exists"))))
 
 
 (define (delete-migration name)
@@ -40,6 +39,3 @@
     (system @~a{DATABASE_URL=postgres://@(db-user):@(db-password)@"@"@(db-host):@(db-port)/@(db-name) raco north migrate -f})
     ))
 
-#;
-(module+ main
-  (run-migrations))

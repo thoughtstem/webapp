@@ -1,6 +1,7 @@
 #lang racket
 
 (require raco/command-name
+         webapp/environment/util
          webapp/scripts/build
          webapp/scripts/dev
          webapp/scripts/bash
@@ -8,7 +9,11 @@
          webapp/scripts/console
          webapp/scripts/server
          webapp/scripts/deploy
-         webapp/scripts/migrate)
+         webapp/scripts/migrate
+         webapp/scripts/generate
+         webapp/scripts/destroy)
+
+(load-current-env!)
 
 (define sub-commands
   (command-line
@@ -31,7 +36,9 @@
     ("init-db"  init-db)
     ("server"  server)
     ("deploy"  deploy)
-    ("migrate"  run-migrations)))
+    ("migrate"  run-migrations)
+    ("generate" generate)
+    ("destroy"  destroy)))
 
 (apply function 
        (rest sub-commands))  

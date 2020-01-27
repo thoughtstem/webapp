@@ -9,7 +9,9 @@
          db
          english)
 
+
 (define (seed-db)
+  (load-current-env!)
   (define insert-seeds! 
     (dynamic-require (string->symbol 
                        (~a (pkg-name) 
@@ -18,11 +20,13 @@
   (void))
 
 (define (create-db)
+  (load-current-env!)
   (local-require webapp/scripts/migrate)
 
   (run-migrations))
 
 (define (drop-db)
+ (load-current-env!)
  (define (racket->sql s)
    (string-replace (~a s) "-" "_"))
 
@@ -34,7 +38,3 @@
 
  (query-exec (conn) "DROP TABLE IF EXISTS north_schema_version"))
 
-(module+ main
-  ;Consider controlling these with commandline arg?
-  (create-db)
-  (seed-db))

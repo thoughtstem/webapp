@@ -1,11 +1,11 @@
 #lang racket
 
+(provide destroy)
+
 (require webapp/scripts/generate/util)
+(require webapp/scripts/migrate)
 
-(module+ main
-  (define args
-    (vector->list (current-command-line-arguments)))
-
+(define (destroy . args)
   (when (not (empty? (rest args)))
     (raise "There should be no field args.  Just supply a model name to destroy."))
 
@@ -18,8 +18,6 @@
   (maybe-delete-file (test-main.rkt name) )
   (maybe-delete-dir (test-dir name))
 
-  (require mc-data/scripts/migrate)
 
-  (delete-migration name)
-  )
+  (delete-migration name))
 

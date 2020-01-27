@@ -27,7 +27,8 @@
 
 (require english)
 (require file/glob)
-(require webapp/logs/util)
+(require webapp/logs/util
+         webapp/environment/util)
 
 (define (doc-main.rkt model-name)
   (build-path "scribblings" "models" (plural model-name) "main.rkt"))
@@ -91,10 +92,10 @@
 (define (model-file-template name fields)
   @~a{
     #lang racket
-    (provide (all-from-out mc-data/models/@|(plural name)|/base))
+    (provide (all-from-out @|(pkg-name)|/models/@|(plural name)|/base))
     (require webapp/models/util
-             mc-data/models/base
-             mc-data/models/@|(plural name)|/base   )
+             @|(pkg-name)|/models/base
+             @|(pkg-name)|/models/@|(plural name)|/base   )
 
     ;TODO: Put your higher-level multi-model logic here.  
   })
