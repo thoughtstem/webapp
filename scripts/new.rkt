@@ -185,7 +185,7 @@
 
         COPY . @|name|
 
-        RUN raco pkg install --auto @|name|/
+        RUN raco pkg install --no-docs --auto @|name|/
 
         WORKDIR "/@|name|"  
         }))
