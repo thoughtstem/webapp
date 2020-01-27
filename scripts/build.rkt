@@ -1,12 +1,18 @@
 #lang at-exp racket
 
-(displayln "Stopping any running mc-data containers") 
-@system{
- docker rm $(docker stop $(docker ps -a -q --filter ancestor=mc-data --format="{{.ID}}"))
-}
+(provide build)
 
-(displayln "Building mc-data image") 
-@system{
-  docker build -t mc-data .  
-}
+(require webapp/environment/util)
 
+(define (build . args)
+  (displayln "Stopping any running containers") 
+  @system{
+    @~a{
+      docker rm $(docker stop $(docker ps -a -q --filter ancestor=@(pkg-name) --format="{{.ID}}"))
+    }
+  }
+
+  (displayln "Building image") 
+  @system{
+    @~a{docker build -t @(pkg-name) .}
+  })

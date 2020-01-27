@@ -24,16 +24,13 @@
       "prod"
       "dev")))
 
-;Used as prefix for 
+;Used as prefix for db stuff
 (define app-name 
   (make-parameter 
     "my_app"))
 
-;The main app installed at the root of the docker container
+;Name of the racket package containing the app 
 (define (pkg-name) 
-  ;TODO: fix this 
-  "mc-data"
-  #;
   (last 
     (string-split
       (~a (current-directory))

@@ -1,5 +1,12 @@
 #lang at-exp racket
 
-@system{
-  racket -l racket -l mc-data/models -l mc-data/db/seeds -i
-}
+(provide console)
+
+(require webapp/environment/util)
+
+(define (console . args)
+  @system{
+    @~a{
+     racket -l racket -l @(pkg-name)/models -l @(pkg-name)/db/seeds -i
+    }
+  })
