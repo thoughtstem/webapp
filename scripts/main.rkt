@@ -11,7 +11,8 @@
          webapp/scripts/deploy
          webapp/scripts/migrate
          webapp/scripts/generate
-         webapp/scripts/destroy)
+         webapp/scripts/destroy
+         webapp/scripts/new)
 
 (load-current-env!)
 
@@ -29,6 +30,7 @@
 
 (define function
   (match sub-command
+    ("new" new)
     ("build" build)
     ("dev"   dev)
     ("enter-bash"  bash)

@@ -1,6 +1,9 @@
 #lang info
 (define collection "webapp")
-(define deps '("base"))
+(define deps '("base"
+               "https://github.com/thoughtstem/website.git"
+               "https://github.com/thoughtstem/english.git"
+               ))
 (define build-deps '("scribble-lib" "racket-doc" "rackunit-lib"))
 (define scribblings '(("scribblings/webapp.scrbl" ())))
 (define pkg-desc "Description Here")

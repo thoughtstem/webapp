@@ -33,7 +33,18 @@
 ;Name of the racket package containing the app 
 (define (pkg-name) 
   ;Very much assumes we are in a docker container and that the web app is at the filesystem root "/"
-  (~a (second (explode-path (first (glob "/*/info.rkt"))))))
+  (with-handlers ([exn:fail?
+                    (thunk*
+                      (define dir 
+                        (~a (last (explode-path (current-directory)))))
+
+                      (displayln (~a "Not in docker container.  Assuming current directory is the app directory: " dir))
+
+                      dir 
+                      )])
+    (~a (second (explode-path (first (glob "/*/info.rkt"))))))
+  
+  )
 
 (define (db-host)
   (or 
@@ -70,7 +81,9 @@
 (define (load-current-env!)
   (with-handlers ([exn:fail? 
                     (thunk* 
-                      (displayln "No current environment/main.rkt file found"))])
+                      #;
+                      (displayln "No current environment/main.rkt file found")
+                      (void) )])
                  (dynamic-require 
                    (string->symbol
                      (~a 
