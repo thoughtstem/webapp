@@ -4,8 +4,8 @@
          create-migration
          delete-migration)
 
-(require mc-data/environment/main
-         webapp/logs/util
+(require webapp/logs/util
+         webapp/environment/util
          (only-in webapp/scripts/generate/util
                   migration-name
                   maybe-delete-file
@@ -40,5 +40,6 @@
     (system @~a{DATABASE_URL=postgres://@(db-user):@(db-password)@"@"@(db-host):@(db-port)/@(db-name) raco north migrate -f})
     ))
 
+#;
 (module+ main
   (run-migrations))

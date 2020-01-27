@@ -27,7 +27,7 @@
   (maybe-create-file (test-main.rkt name) 
                      (test-file-template name fields))
 
-  (require mc-data/scripts/migrate)
+  (require webapp/scripts/migrate)
 
   (create-migration name
                     (thunk

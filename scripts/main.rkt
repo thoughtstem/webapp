@@ -7,7 +7,8 @@
          webapp/scripts/init-db
          webapp/scripts/console
          webapp/scripts/server
-         webapp/scripts/deploy)
+         webapp/scripts/deploy
+         webapp/scripts/migrate)
 
 (define sub-commands
   (command-line
@@ -29,7 +30,8 @@
     ("console"  console)
     ("init-db"  init-db)
     ("server"  server)
-    ("deploy"  deploy)))
+    ("deploy"  deploy)
+    ("migrate"  run-migrations)))
 
 (apply function 
        (rest sub-commands))  
