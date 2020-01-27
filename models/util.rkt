@@ -110,19 +110,12 @@
                   "~a-schema" 
                   (syntax->datum #'to)))
 
-     (define to-module
-       (format-id #'to
-                  (~a (pkg-name) "/models/~a/base")
-                  (plural (syntax->datum #'to))))
-
-
      #`(begin
          (provide #,from->to)
          (define (#,from->to model)
            (define to-schema
-             (dynamic-require
-               '#,to-module 
-               '#,to-schema))
+             (dynamic-find-base-function '#,to-schema))
+
            (define s
              (in-entities
                (conn)
@@ -167,18 +160,11 @@
                   "~a-schema" 
                   (syntax->datum #'to)))
 
-     (define to-module
-       (format-id #'to
-                  (~a (pkg-name) "/models/~a/base")
-                  (plural (syntax->datum #'to))))
-
-
      #`(begin
          (provide #,from->tos)
          (define (#,from->tos model)
            (define to-schema
-             (dynamic-require
-               '#,to-module 
+             (dynamic-find-base-function
                '#,to-schema))
            (define s
              (in-entities
@@ -192,6 +178,12 @@
            (sequence->list s)
 
            ))]))
+
+(define (dynamic-find-base-function f-name)
+  (dynamic-require
+    (string->symbol 
+      (~a (pkg-name) "/models/base"))
+    f-name))
 
 (define-syntax (belongs-to stx)
   (syntax-parse stx
@@ -216,11 +208,6 @@
                   "~a-schema" 
                   (syntax->datum #'to)))
 
-     (define to-module
-       (format-id #'to
-                  (~a (pkg-name) "/models/~a/base") 
-                  (plural (syntax->datum #'to))))
-
      (define from-module
        (format-id #'to
                   (~a (pkg-name) "/models/~a/base")
@@ -231,12 +218,9 @@
          (provide #,from->to)
          (define (#,from->to model)
            (define to-schema
-             (dynamic-require
-               '#,to-module 
-               '#,to-schema))
+             (dynamic-find-base-function '#,to-schema))
            (define to-id
-             (dynamic-require
-               '#,from-module 
+             (dynamic-find-base-function
                '#,to-id))
            (define s
              (in-entities

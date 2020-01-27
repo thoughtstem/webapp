@@ -27,7 +27,7 @@
   @~a{docker run -dt -p 8080:8080 -v `pwd`:/@(pkg-name) @(string-join (map patch-in dev-pkgs) " ") @(pkg-name) } 
   }
 
-  (displayln "Starting postgres and seeding the database within the container") 
+  (displayln "Starting postgres") 
   @system{
     @~a{
       docker exec `docker ps -q --filter ancestor=@(pkg-name) --format="{{.ID}}"` bash -c "/etc/init.d/postgresql start;" 

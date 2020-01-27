@@ -30,11 +30,13 @@
     "my_app"))
 
 ;Name of the racket package containing the app 
-(define (pkg-name) 
-  (last 
-    (string-split
-      (~a (current-directory))
-      "/")))
+(define pkg-name 
+  ;Another possibility is to set this based on what's at the root of the docker container.    
+  (make-parameter
+    (last 
+      (string-split
+        (~a (current-directory))
+        "/"))))
 
 (define (db-host)
   (or 
@@ -45,13 +47,13 @@
   (~a 5432))
 
 (define (db-name)
-  (~a "metacoders_" (env)))
+  (~a (app-name) "_" (env)))
 
 (define (db-user)
-  (~a "metacoders_" (env)))
+  (~a (app-name) "_" (env)))
 
 (define (db-password)
-  (~a "metacoders_" (env)))
+  (~a (app-name) "_" (env)))
 
 (define last-connection #f)
 
@@ -60,9 +62,9 @@
     (set! last-connection
       (postgresql-connect
         #:server   (db-host)
-        #:user     (~a "metacoders_" (env)) 
-        #:database (~a "metacoders_" (env))
-        #:password (~a "metacoders_" (env)))))
+        #:user     (~a (app-name) "_" (env)) 
+        #:database (~a (app-name) "_" (env))
+        #:password (~a (app-name) "_" (env)))))
 
   ;TODO: Pooling and virtual connections.
   last-connection)

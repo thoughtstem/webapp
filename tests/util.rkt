@@ -1,11 +1,17 @@
 #lang racket
 
-(provide tests)
+(provide tests
+         (all-from-out 
+           rackunit
+           webapp/db/util  
+           webapp/models/util  
+           ))
 
 (require rackunit) 
 (require webapp/logs/util
          webapp/environment/util 
-         webapp/db/util)
+         webapp/db/util
+         webapp/models/util)
 
 (define-syntax-rule (tests exp ...)
   (module+ test

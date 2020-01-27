@@ -6,7 +6,8 @@
          webapp/scripts/bash
          webapp/scripts/init-db
          webapp/scripts/console
-         webapp/scripts/server)
+         webapp/scripts/server
+         webapp/scripts/deploy)
 
 (define sub-commands
   (command-line
@@ -25,9 +26,10 @@
     ("build" build)
     ("dev"   dev)
     ("enter-bash"  bash)
-    ("enter-console"  console)
+    ("console"  console)
     ("init-db"  init-db)
-    ("server"  server)))
+    ("server"  server)
+    ("deploy"  deploy)))
 
 (apply function 
        (rest sub-commands))  
