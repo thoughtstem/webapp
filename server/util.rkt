@@ -6,12 +6,17 @@
          response/html
          response/html/content
          request->params
-         response/jsexpr)
+         response/jsexpr
+         (all-from-out
+           web-server/servlet
+           web-server/servlet-env
+           website/bootstrap))
 
 (require (except-in website/bootstrap
                     select header)
          web-server/http/response-structs
          web-server/servlet
+         web-server/servlet-env
          webapp/models/util
          english
          racket/hash

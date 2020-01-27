@@ -16,9 +16,8 @@
   (render (new-project-files name) 
           #:to name)
   
-  ;A few extra directories
-  (new-project-dir name "db" "migrations")
-  )
+  ;Empty directories can get created here
+  (new-project-dir name "db" "migrations"))
 
 (define (new-project-dir name . args)
   (make-directory
@@ -32,6 +31,7 @@
     (Dockerfile name)
     (db/seeds.rkt name)
     (tests/util.rkt name)
+    (models.rkt name)
     (models/base.rkt name)
     (models/main.rkt name)
     (server/main.rkt name)
@@ -65,15 +65,14 @@
         @~a{
         #lang racket
 
-        (require web-server/servlet
-                 webapp/server/util)
+        (require webapp/server/util)
 
         (provide server-dispatch)
 
         (define-values (server-dispatch server-url)
           ;Add your routes here
           (dispatch-rules
-            [("test")
+            [("home")
              (lambda (req)
                (response/html/content
                  (h1 "Welcome to @|name|"))) ]
@@ -85,7 +84,7 @@
         @~a{
         #lang racket
 
-        (require web-server/servlet
+        (require webapp/server/util
                  @|name|/server/routes
                  (only-in website/bootstrap render bootstrap-files))
 
@@ -96,7 +95,7 @@
 
           (serve/servlet #:port 8080
                          #:servlet-regexp #rx""
-                         #:servlet-path "/"
+                         #:servlet-path "/home"
                          #:listen-ip "0.0.0.0"
                          #:extra-files-paths (list (build-path "public"))
                          server-dispatch))
@@ -131,7 +130,7 @@
   (page '("info.rkt")
         @~a{
         #lang info
-        (define collection "mc-data")
+        (define collection "@|name|")
         (define deps '("base" 
                        "reprovide-lang"
                        "https://github.com/thoughtstem/webapp.git"
@@ -213,7 +212,7 @@
 
         (require webapp/environment/util)
 
-        (app-name "|@name|")
+        (app-name "@name")
         }))
 
 

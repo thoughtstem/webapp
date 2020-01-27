@@ -2,6 +2,7 @@
 (define collection "webapp")
 (define deps '("base"
                "deta"
+               "raart"
                "https://github.com/thoughtstem/website.git"
                "https://github.com/thoughtstem/english.git"
                ))
