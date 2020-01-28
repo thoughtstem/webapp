@@ -48,7 +48,7 @@
 
 (define (db-host)
   (or 
-    (getenv "DB-HOST")
+    (getenv "DB_HOST")
     (~a "localhost")))
 
 (define (db-port)

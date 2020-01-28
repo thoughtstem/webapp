@@ -6,7 +6,7 @@
 
 (define (deploy . args)
   (when (empty? args)
-    (error "deploy requires a tag -- which will be given to the most recent build and pushed to dockerhub"))
+    (raise "deploy requires a tag -- which will be given to the most recent build and pushed to dockerhub"))
 
   @system{
     @~a{
