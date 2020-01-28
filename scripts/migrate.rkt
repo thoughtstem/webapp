@@ -34,8 +34,9 @@
     (maybe-delete-file (first g)))) 
 
 (define (run-migrations)
+  (load-current-env!)
   (displayln (~a "Running migrations on Env: " (env)))
-  (parameterize ([current-directory (build-path (current-directory) "db")])
+  (parameterize ([current-directory (build-path "/" (pkg-name) "db")])
     (system @~a{DATABASE_URL=postgres://@(db-user):@(db-password)@"@"@(db-host):@(db-port)/@(db-name) raco north migrate -f})
     ))
 
