@@ -1,14 +1,23 @@
 #lang at-exp racket
 
+;TODO: This hardcodes 7.5 as the Racket version, which is bad.  
+;  But I haven't found a better way.
+;  Whenever I try to run raco update --link ... in the docker container,
+;  I get stuff like this
+;  Uninstalling to prepare re-install of webapp
+;  Moving webapp to trash: /root/.racket/7.5/pkgs/.trash/1580229532-0-webapp
+;  rename-file-or-directory: cannot rename file or directory
+;    source path: /root/.racket/7.5/pkgs/webapp
+;    dest path: /root/.racket/7.5/pkgs/.trash/1580229532-0-webapp
+;    system error: Invalid cross-device link; errno=18
+
 (provide dev)
 
 (require webapp/environment/util)
 
 (define (dev . args)
   (define dev-pkgs 
-    args
-    #;
-    (vector->list (current-command-line-arguments)))
+    args)
 
   (displayln "Stopping any running containers") 
   @system{
@@ -21,7 +30,7 @@
   (define (patch-in pkg)
     (displayln (~a "  Patching in " pkg))
     (define pkg-name (last (string-split pkg "/")))
-    @~a{-v @|pkg|:/root/.racket/7.0/pkgs/@|pkg-name|})
+    @~a{-v @|pkg|:/root/.racket/7.5/pkgs/@|pkg-name|})
 
   @system{
   @~a{docker run -dt -p 8080:8080 -v `pwd`:/@(pkg-name) @(string-join (map patch-in dev-pkgs) " ") @(pkg-name) } 

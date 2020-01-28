@@ -35,7 +35,7 @@
 
 (define (run-migrations)
   (displayln (~a "Running migrations on Env: " (env)))
-  (parameterize ([current-directory "/mc-data/db"])
+  (parameterize ([current-directory (build-path (current-directory) "db")])
     (system @~a{DATABASE_URL=postgres://@(db-user):@(db-password)@"@"@(db-host):@(db-port)/@(db-name) raco north migrate -f})
     ))
 
