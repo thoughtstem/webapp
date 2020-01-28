@@ -7,13 +7,15 @@
          response/html/content
          request->params
          response/jsexpr
-         (all-from-out
-           web-server/servlet
-           web-server/servlet-env
-           website/bootstrap))
+         (except-out
+           (all-from-out
+             web-server/servlet
+             web-server/servlet-env
+             website/bootstrap)
+           header
+           script))
 
-(require (except-in website/bootstrap
-                    select header)
+(require (except-in website/bootstrap select header)
          web-server/http/response-structs
          web-server/servlet
          web-server/servlet-env
