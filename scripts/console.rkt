@@ -7,6 +7,6 @@
 (define (console . args)
   @system{
     @~a{
-    racket -l racket -l blog/models -l blog/db/seeds -l webapp/environment/util -e "(load-current-env\!)" -i
+    racket -l racket -l @(pkg-name)/models -l @(pkg-name)/db/seeds -l webapp/environment/util -e "(load-current-env\!)" -i
     }
   })
