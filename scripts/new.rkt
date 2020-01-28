@@ -65,7 +65,8 @@
         @~a{
         #lang racket
 
-        (require webapp/server/util)
+        (require webapp/server/util
+                 @|name|/models)
 
         (provide server-dispatch)
 
@@ -85,10 +86,12 @@
         #lang racket
 
         (require webapp/server/util
+                 webapp/environment/util 
                  @|name|/server/routes
                  (only-in website/bootstrap render bootstrap-files))
 
         (define (server)
+          (load-current-env!)
           (render #:to "public"
                   (list
                     (bootstrap-files)))
@@ -144,24 +147,24 @@
 (define (db/seeds.rkt name)
   (page db/seeds.rkt
         @~a{
-          #lang racket
+        #lang racket
 
-          (provide insert-seeds!)
+        (provide insert-seeds!)
 
-          (require webapp/models/util)
+        (require webapp/models/util)
 
+        #;
+        (define-seed unicorns
+                     (find-course-by-name "Becoming Unicorn")
+                     (make-course #:name "Becoming Unicorn"
+                                  #:description "How to be the unicorn you feel you are"))
+
+        (define (insert-seeds!)
+          ;Touch your seeds here, e.g.
           #;
-          (define-seed unicorns
-            (find-course-by-name "Becoming Unicorn")
-            (make-course #:name "Becoming Unicorn"
-                         #:description "How to be the unicorn you feel you are"))
+          unicorns
 
-          (define (insert-seeds!)
-            ;Touch your seeds here, e.g.
-            #;
-            unicorns
-
-            (void))  
+          (void))  
         }))
 
 (define (Dockerfile name)  
@@ -196,7 +199,7 @@
         @~a{
         #lang scribble/manual
         @"@"require[@"@"for-label[racket/base]
-                    webapp/scribblings/util]
+                     webapp/scribblings/util]
 
         @"@"title{@name} 
         }))
@@ -206,7 +209,7 @@
   (page environment/main.rkt  
         @~a{
         #lang racket
-          
+
         (provide (all-from-out
                    webapp/environment/util))
 
