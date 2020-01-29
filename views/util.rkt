@@ -1,6 +1,7 @@
 #lang racket
 
-(provide back-to-index)
+(provide back-to-index
+         chip)
 
 (require website/bootstrap
          english)
@@ -11,3 +12,8 @@
          (~a "View All "
              (string-titlecase
                (plural model-name))))))
+
+(define (chip url content)
+  (a href: url
+     (badge-pill-info 
+       content)))

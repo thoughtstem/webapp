@@ -7,6 +7,7 @@
          response/html/content
          request->params
          response/jsexpr
+         basic-index-table
          (except-out
            (all-from-out
              web-server/servlet
@@ -46,37 +47,8 @@
   (if (empty? models)
     (container (h1 "Table is empty")) 
     (let ()
-      (define fields (get-fields (first models)))
+      (basic-index-table models))))
 
-      (define (my-td f v)
-        (td
-          (cond 
-            [(eq? 'id f)
-             (a href: (~a "/" (plural model-name) "/" v)
-                v)]
-            [(string-suffix? (~a f) "-id")
-             (define other-model-name (first (string-split (~a f) "-")))
-             (a href: (~a "/" (plural other-model-name) "/" v)
-                v)]
-            [else v])))
-
-      (define (fields->tds m)
-        (map my-td 
-             (get-fields m)
-             (get-values m)))
-
-      (container
-        (h1 (string-titlecase (~a model-name)) " Index:") 
-        (card
-          (table class: "table"
-                 (thead
-                   (tr
-                     (map (curry th 'scope: "col")
-                          fields)))
-
-                 (tbody
-                   (map (compose tr fields->tds) 
-                        models))))))))
 
 (define (scaffold-show-html model)
   (define fields (get-fields model))  
@@ -180,4 +152,42 @@
     (list (jsexpr->bytes jsexpr))))
 
 
+(define (basic-index-table models
+                           #:renderers (renderers (hash)))
+
+  (define model-name (get-type (first models)))
+  (define fields (get-fields (first models)))
+
+  (define (my-td o f v)
+    (define special-renderer 
+      (hash-ref renderers f #f))
+    (td
+      (cond 
+        [special-renderer (special-renderer o v)]
+        [(eq? 'id f)
+         (a href: (~a "/" (plural model-name) "/" v)
+            v)]
+        [(string-suffix? (~a f) "-id")
+         (define other-model-name (first (string-split (~a f) "-")))
+         (a href: (~a "/" (plural other-model-name) "/" v)
+            v)]
+        [else v])))
+
+  (define (fields->tds m)
+    (map (curry my-td m) 
+         (get-fields m)
+         (get-values m)))
+
+  (container
+    (h1 (string-titlecase (~a model-name)) " Index:") 
+    (card
+      (table class: "table"
+             (thead
+               (tr
+                 (map (curry th 'scope: "col")
+                      fields)))
+
+             (tbody
+               (map (compose tr fields->tds) 
+                    models))))))
 
