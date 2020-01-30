@@ -61,12 +61,18 @@
                (map (compose tr fields->tds) 
                     models))))))
 
-(define (basic-show-table model)
+(define (basic-show-table model
+			  #:renderers (renderers (hash)))
   (define fields (get-fields model))  
   (define values (get-values model))  
 
   (define (my-row f v)
-    (tr (td f) (td v)))
+    (define special-renderer (hash-ref renderers f #f))
+    (tr (td f) 
+	(td 
+	  (if special-renderer
+	      (special-renderer model v)
+	      v))))
 
   (div
     (table class: "table"
@@ -75,3 +81,12 @@
                  (td "Value")))
            (tbody
              (map my-row fields values)))) )
+
+
+
+
+
+
+
+
+

@@ -143,8 +143,5 @@
            arg-funcs
            args)) 
 
-    (returning (apply f martialed-args))) 
-
-
-  )
+    (returning (apply f martialed-args))))
 
