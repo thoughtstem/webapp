@@ -235,7 +235,11 @@
                            ,(to-id model)))
                  (project-onto to-schema))))
 
-           (first (sequence->list s))
+           (define l
+             (sequence->list s))  
+           (if (empty? l)
+             #f
+             (first l))
 
            ))]))
 

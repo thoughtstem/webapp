@@ -7,20 +7,22 @@
          response/html/content
          request->params
          response/jsexpr
-         basic-index-table
          (except-out
            (all-from-out
              web-server/servlet
              web-server/servlet-env
              website/bootstrap)
            header
-           script))
+           script)
+         
+         serve-function)
 
 (require (except-in website/bootstrap select header)
          web-server/http/response-structs
          web-server/servlet
          web-server/servlet-env
          webapp/models/util
+         webapp/views/util
          english
          racket/hash
 	 net/uri-codec
@@ -39,9 +41,8 @@
     (define model 
       (find-by-id model-name i))
 
-    (response/html
-      (content
-        (scaffold-show-html model))))) 
+    (response/html/content
+      (basic-show-table model))))
 
 (define (scaffold-index-html model-name models)
   (if (empty? models)
@@ -50,26 +51,7 @@
       (basic-index-table models))))
 
 
-(define (scaffold-show-html model)
-  (define fields (get-fields model))  
-  (define values (get-values model))  
 
-  (define (my-row f v)
-    (tr (td f) (td v)))
-
-  (container
-    (h1 (string-titlecase (~a (get-type model))) 
-        " Show")
-    (button-link 
-      (a href: (~a "/" (plural (get-type model)))
-         "Back to Index"))
-    (card
-      (table class: "table"
-        (thead 
-          (tr (td "Field")
-              (td "Value")))
-        (tbody
-          (map my-row fields values))))))
 
 (define (response/html html)
   (response/full
@@ -151,43 +133,15 @@
     empty
     (list (jsexpr->bytes jsexpr))))
 
+(define (serve-function #:returning returning f . arg-funcs)
+  (lambda (req . args)
+    (define martialed-args
+      (map apply
+           arg-funcs
+           args)) 
 
-(define (basic-index-table models
-                           #:renderers (renderers (hash)))
+    (returning (apply f martialed-args))) 
 
-  (define model-name (get-type (first models)))
-  (define fields (get-fields (first models)))
 
-  (define (my-td o f v)
-    (define special-renderer 
-      (hash-ref renderers f #f))
-    (td
-      (cond 
-        [special-renderer (special-renderer o v)]
-        [(eq? 'id f)
-         (a href: (~a "/" (plural model-name) "/" v)
-            v)]
-        [(string-suffix? (~a f) "-id")
-         (define other-model-name (first (string-split (~a f) "-")))
-         (a href: (~a "/" (plural other-model-name) "/" v)
-            v)]
-        [else v])))
-
-  (define (fields->tds m)
-    (map (curry my-td m) 
-         (get-fields m)
-         (get-values m)))
-
-  (container
-    (h1 (string-titlecase (~a model-name)) " Index:") 
-    (card
-      (table class: "table"
-             (thead
-               (tr
-                 (map (curry th 'scope: "col")
-                      fields)))
-
-             (tbody
-               (map (compose tr fields->tds) 
-                    models))))))
+  )
 
