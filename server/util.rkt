@@ -15,7 +15,8 @@
            header
            script)
          
-         serve-function)
+         serve-function
+	 (rename-out [identity as-is]))
 
 (require (except-in website/bootstrap select header)
          web-server/http/response-structs
@@ -133,10 +134,12 @@
     empty
     (list (jsexpr->bytes jsexpr))))
 
-(define (serve-function #:returning returning f . arg-funcs)
+(define (serve-function #:returning returning
+			f . arg-funcs)
+  (define (call f x) (f x))
   (lambda (req . args)
     (define martialed-args
-      (map apply
+      (map call
            arg-funcs
            args)) 
 
