@@ -387,7 +387,7 @@
 	 (define-syntax (#,search-for-names-base stx) 
 	     (syntax-parse stx
 			   [(search-for-names params) 
-			    #`(search-for-names params identity)] 
+			    #`(search-for-names params (where (= 0 0)))] 
 			   [(search-for-names params other) 
 			   #'(let ()
 			       (local-require webapp/environment/util 
