@@ -294,6 +294,10 @@
        (format-id #'name "all-~a"
                   plural-name))
 
+     (define search-for-names
+       (format-id #'name "search-for-~a"
+		  plural-name))
+
      (define (create-finders f)
        (define find-Xs-by-F
          (format-id #'name
@@ -306,6 +310,7 @@
                     "find-~a-by-~a"
                     #'name
                     f))
+
 
        (define x.field
          (format-id #'name
@@ -372,6 +377,31 @@
 
          (define (#,all-names)
            (all name))
+
+         (provide #,search-for-names)
+
+	 (define-syntax (#,search-for-names stx) 
+	     (syntax-parse stx
+			   [(search-for-names params) 
+			    #`(search-for-names params identity)] 
+			   [(search-for-names params other) 
+			   #'(let ()
+			       (local-require webapp/environment/util 
+					      threading)
+
+			       (define the-offset (hash-ref params 'offset 0))
+			       (define the-limit  (hash-ref params 'limit 10))
+
+			       (for/list 
+				 ([a (in-entities (conn)
+						  (~> 
+						    (from name #:as a)
+						    (offset ,(string->number the-offset))
+						    (limit ,(string->number the-limit))
+						    other
+						    ))])
+
+						 a))]))
 
          #,@(map create-finders (syntax->datum #'(field-name ...)))
 
