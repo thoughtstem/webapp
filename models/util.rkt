@@ -389,15 +389,25 @@
 			       (local-require webapp/environment/util 
 					      threading)
 
-			       (define the-offset (hash-ref params 'offset 0))
-			       (define the-limit  (hash-ref params 'limit 10))
+			       (define the-offset 
+				 (hash-ref params 'offset 0))
+			       (define the-limit  
+				 (hash-ref params 'limit 10))
+
+			       (when (string? the-offset)
+				 (set! the-offset 
+				   (string->number the-offset)))
+
+			       (when (string? the-limit)
+				 (set! the-limit 
+				   (string->number the-limit)))
 
 			       (for/list 
 				 ([a (in-entities (conn)
 						  (~> 
 						    (from name #:as a)
-						    (offset ,(string->number the-offset))
-						    (limit ,(string->number the-limit))
+						    (offset ,the-offset)
+						    (limit ,the-limit)
 						    other
 						    ))])
 
