@@ -51,7 +51,6 @@
 		 (get-values m)))
 
 	  (container
-	    (h1 (string-titlecase (~a model-name)) " Index:") 
 	    (card
 	      (table class: "table"
 		     (thead

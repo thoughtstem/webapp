@@ -294,6 +294,10 @@
        (format-id #'name "all-~a"
                   plural-name))
 
+     (define search-for-names-base
+       (format-id #'name "search-for-~a-base"
+		  plural-name))
+
      (define search-for-names
        (format-id #'name "search-for-~a"
 		  plural-name))
@@ -378,9 +382,9 @@
          (define (#,all-names)
            (all name))
 
-         (provide #,search-for-names)
+         (provide #,search-for-names-base)
 
-	 (define-syntax (#,search-for-names stx) 
+	 (define-syntax (#,search-for-names-base stx) 
 	     (syntax-parse stx
 			   [(search-for-names params) 
 			    #`(search-for-names params identity)] 
@@ -412,6 +416,11 @@
 						    ))])
 
 						 a))]))
+
+
+         (provide #,search-for-names)
+         (define (#,search-for-names ps)
+	   (#,search-for-names-base ps))
 
          #,@(map create-finders (syntax->datum #'(field-name ...)))
 
