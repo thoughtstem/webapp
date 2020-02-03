@@ -16,6 +16,7 @@
            script)
          
          serve-function
+	 current-req
 	 (rename-out [identity as-is]))
 
 (require (except-in website/bootstrap select header)
@@ -134,14 +135,17 @@
     empty
     (list (jsexpr->bytes jsexpr))))
 
+(define current-req (make-parameter #f))
+
 (define (serve-function #:returning returning
 			f . arg-funcs)
   (define (call f x) (f x))
   (lambda (req . args)
-    (define martialed-args
-      (map call
-           arg-funcs
-           args)) 
+    (parameterize ([current-req req])
+	    (define martialed-args
+	      (map call
+		   arg-funcs
+		   args)) 
 
-    (returning (apply f martialed-args))))
+	    (returning (apply f martialed-args))) ))
 

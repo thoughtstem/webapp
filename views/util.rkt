@@ -25,41 +25,44 @@
 (define (basic-index-table models
                            #:renderers (renderers (hash)))
 
-  (define model-name (get-type (first models)))
-  (define fields (get-fields (first models)))
+  (cond [(empty? models) (div "No data")]
+        [else
+	  (define model-name (get-type (first models)))
+	  (define fields (get-fields (first models)))
 
-  (define (my-td o f v)
-    (define special-renderer 
-      (hash-ref renderers f #f))
-    (td
-      (cond 
-        [special-renderer (special-renderer o v)]
-        [(eq? 'id f)
-         (a href: (~a "/" (plural model-name) "/" v)
-            v)]
-        [(string-suffix? (~a f) "-id")
-         (define other-model-name (first (string-split (~a f) "-")))
-         (a href: (~a "/" (plural other-model-name) "/" v)
-            v)]
-        [else v])))
+	  (define (my-td o f v)
+	    (define special-renderer 
+	      (hash-ref renderers f #f))
+	    (td
+	      (cond 
+		[special-renderer (special-renderer o v)]
+		[(eq? 'id f)
+		 (a href: (~a "/" (plural model-name) "/" v)
+		    v)]
+		[(string-suffix? (~a f) "-id")
+		 (define other-model-name (first (string-split (~a f) "-")))
+		 (a href: (~a "/" (plural other-model-name) "/" v)
+		    v)]
+		[else v])))
 
-  (define (fields->tds m)
-    (map (curry my-td m) 
-         (get-fields m)
-         (get-values m)))
+	  (define (fields->tds m)
+	    (map (curry my-td m) 
+		 (get-fields m)
+		 (get-values m)))
 
-  (container
-    (h1 (string-titlecase (~a model-name)) " Index:") 
-    (card
-      (table class: "table"
-             (thead
-               (tr
-                 (map (curry th 'scope: "col")
-                      fields)))
+	  (container
+	    (h1 (string-titlecase (~a model-name)) " Index:") 
+	    (card
+	      (table class: "table"
+		     (thead
+		       (tr
+			 (map (curry th 'scope: "col")
+			      fields)))
 
-             (tbody
-               (map (compose tr fields->tds) 
-                    models))))))
+		     (tbody
+		       (map (compose tr fields->tds) 
+			    models)))))
+	  ]))
 
 (define (basic-show-table model
 			  #:renderers (renderers (hash)))
@@ -70,9 +73,7 @@
     (define special-renderer (hash-ref renderers f #f))
     (tr (td f) 
 	(td 
-	  (if special-renderer
-	      (special-renderer model v)
-	      v))))
+	  (or special-renderer v))))
 
   (div
     (table class: "table"

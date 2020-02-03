@@ -74,22 +74,50 @@
                       (model-error e))])
                  lines ...))
 
+(provide with-query-cache)
+
+(define query-cache (make-parameter (hash)))
+
+(define-syntax-rule (with-query-cache expr ...)
+  (parameterize ([query-cache (hash)])
+    expr ...))
+
+(define (log . msg)
+  (define msg2
+    (if (and (= 2 (length msg)) (entity? (second msg)))
+	(list-set msg 1 
+		  (get (second msg) 'id)
+		  #;
+		  (~a (second msg) #:max-width 20))
+	msg))
+
+  (when (not (hash-has-key? (query-cache) msg2))
+    (displayln `("Cache miss" ,msg2))
+    (query-cache (hash-set (query-cache) msg2 #t)))
+
+  (pretty-print msg2))
+
 (define (my-insert-one! model)
+  (log 'insert-one!)
   (catch-model-errors
     (insert-one! (conn) model)))
 
 (define (my-update! . models)
+  (log 'update!)
   (apply update-one! (conn) models))
 
 (define (my-update-one! model)
+  (log 'update-one!)
   (catch-model-errors
     (update-one! (conn) model))   )
 
 (define (my-delete! . model)
+  (log 'delete!)
   (catch-model-errors
     (apply delete! (conn) model)))
 
 (define (my-delete-one! model)
+  (log 'delete-one!)
   (catch-model-errors
     (delete-one! (conn) model)))
 
@@ -123,6 +151,7 @@
      #`(begin
          (provide #,from->to)
          (define (#,from->to model)
+           (log '#,from->to model)
            (define to-schema
              (dynamic-find-base-function '#,to-schema))
 
@@ -173,6 +202,8 @@
      #`(begin
          (provide #,from->tos)
          (define (#,from->tos model)
+           (log '#,from->tos model)
+
            (define to-schema
              (dynamic-find-base-function
                '#,to-schema))
@@ -221,6 +252,7 @@
      #`(begin
          (provide #,from->to)
          (define (#,from->to model)
+           (log '#,from->to model)
            (define to-schema
              (dynamic-find-base-function '#,to-schema))
            (define to-id
@@ -290,6 +322,7 @@
                     #,find-X-by-F) 
 
            (define (#,find-Xs-by-F v)
+	     (log '#,find-Xs-by-F v)
              (define s
                (in-entities
                  (conn)
@@ -302,6 +335,7 @@
              (sequence->list s))
            
            (define (#,find-X-by-F v)
+	     (log '#,find-X-by-F v)
              (define s
                (in-entities
                  (conn)
@@ -375,22 +409,26 @@
        (get-fields model)))
 
 (define-syntax-rule (all model)
+  (begin
+  (log 'all)
   (for/list 
     ([c (in-entities (conn)
                      (~> 
                        (from model #:as c)))])
 
-    c))
+    c)))
 
 (define-syntax-rule (find-by-id model i)
-  (first
-    (for/list 
-      ([c (in-entities (conn)
-                       (~> 
-                         (from model #:as c)
-                         (where (= c.id ,i))))])
+(begin
+  (log 'find-by-id 'model i)
+    (first
+      (for/list 
+        ([c (in-entities (conn)
+                         (~> 
+                           (from model #:as c)
+                           (where (= c.id ,i))))])
 
-      c)))
+        c))))
 
 (define-syntax (define-seed stx)
   (syntax-parse stx
