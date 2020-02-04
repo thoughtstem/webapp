@@ -302,6 +302,10 @@
        (format-id #'name "search-for-~a"
 		  plural-name))
 
+     (define reload-name
+       (format-id #'name "reload-~a"
+		  (syntax-e #'name)))
+
      (define (create-finders f)
        (define find-Xs-by-F
          (format-id #'name
@@ -376,6 +380,10 @@
          (define (#,name-fields)
            '(field-name ...))
          
+         (provide #,reload-name)
+
+         (define (#,reload-name x)
+           (find-by-id name (get x 'id)))
 
          (provide #,all-names)
 
