@@ -26,6 +26,7 @@
 
          all
          find-by-id
+
          get
          get-fields
          get-values
@@ -478,6 +479,7 @@
                        (from model #:as c)))])
 
     c)))
+
 
 (define-syntax-rule (find-by-id model i)
 (begin
