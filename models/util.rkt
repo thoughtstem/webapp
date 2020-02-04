@@ -92,10 +92,14 @@
 	msg))
 
   (when (not (hash-has-key? (query-cache) msg2))
+    #;
     (displayln `("Cache miss" ,msg2))
     (query-cache (hash-set (query-cache) msg2 #t)))
 
-  (pretty-print msg2))
+  #;
+  (pretty-print msg2)
+  
+  (void))
 
 (define (my-insert-one! model)
   (log 'insert-one!)

@@ -17,7 +17,8 @@
          
          serve-function
 	 current-req
-	 (rename-out [identity as-is]))
+	 (rename-out [identity as-is])
+	 function->link)
 
 (require (except-in website/bootstrap select header)
          web-server/http/response-structs
@@ -147,5 +148,14 @@
 		   arg-funcs
 		   args)) 
 
-	    (returning (apply f martialed-args))) ))
+	    (send/suspend/dispatch
+	      (lambda (e)
+		(parameterize [(embed/url e)]
+		  (returning (apply f martialed-args))))))))
+
+(define embed/url (make-parameter #f))
+
+(define (function->link f)
+  ((embed/url) f))
+
 
