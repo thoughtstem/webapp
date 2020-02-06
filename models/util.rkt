@@ -439,7 +439,8 @@
 
          )]))
 
-(define (get model field-name)
+(define/contract (get model field-name)
+  (-> entity? (or/c string? symbol?) any/c)
   (define type (get-type model))
   (define f (dynamic-require (string->symbol 
                                (~a (pkg-name) "/models")) 

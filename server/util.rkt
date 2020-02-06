@@ -12,8 +12,11 @@
              web-server/servlet
              web-server/servlet-env
              website/bootstrap)
+
+	   ;Random identifiers that we rarely use and which commonly conflict with user's vocabulary in the domain of webapps
            header
-           script)
+           script
+	   address)
          
          serve-function
 	 current-req
