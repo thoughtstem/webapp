@@ -10,9 +10,22 @@
          db-name
          db-user
          db-password
-         load-current-env!)
+         load-current-env!
+	 
+	 prod?
+	 dev?
+	 test?)
 
 (require db file/glob)
+
+(define (prod?)
+  (environment-is? "prod"))
+
+(define (dev?)
+  (environment-is? "dev"))
+
+(define (test?)
+  (environment-is? "test"))
 
 (define (environment-is? s)
   (define e

@@ -9,7 +9,7 @@
   model-file-template
   model-base-file-template
 
-  seed-value-of-type
+  type->db-type
 
   migration-name
   test-main.rkt
@@ -151,21 +151,13 @@
         (all @name)))
   })
 
-(define (seed-value-of-type t)
-  (match t
-    ["integer" 1] 
-    ["id" 1]
-    ["string" "\"TEMP\""] 
-  ;  ["date" ""] TODO: Gregor 
-    [else (raise (~a "Unsupported type: " t))]))
-
 
 (define (type->db-type t)
   (match t
     ["integer" "integer"] 
     ["id" "integer"] 
     ["string" "text"] 
-  ;  ["date" ""] TODO
+    ["datetime-tz" "timestamptz"] 
     [else (raise (~a "Unsupported type: " t))]))
 
 
