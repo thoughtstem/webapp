@@ -35,7 +35,7 @@
     (define pkg-name (last (string-split pkg "/")))
     @~a{-v @|pkg|:/root/.racket/7.5/pkgs/@|pkg-name|})
 
-  @displayln{
+  @system{
      @;@~a{docker run -dt -p 8080:8080 -v $(pwd) -w /@(pkg-name) @(string-join (map patch-in dev-pkgs) " ") @(pkg-name)}
      @~a{docker run -dt -p 8080:8080 -v @(~a (path->string (current-directory)) ":/" (pkg-name)) @(string-join (map patch-in dev-pkgs) " ") @(pkg-name)}
   }
