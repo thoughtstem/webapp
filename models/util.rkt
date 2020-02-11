@@ -255,30 +255,33 @@
 
 
      #`(begin
-         (provide #,from->to)
-         (define (#,from->to model)
-           (log '#,from->to model)
-           (define to-schema
-             (dynamic-find-base-function '#,to-schema))
-           (define to-id
-             (dynamic-find-base-function
-               '#,to-id))
-           (define s
-             (in-entities
-               (conn)
-               (~>
-                 (#,'from #,(sqlify (plural to-name)) #:as x)
-                 (where (= x.id
-                           ,(to-id model)))
-                 (project-onto to-schema))))
+	 (provide #,from->to)
+	 (define (#,from->to model)
+	   (log '#,from->to model)
+	   (define to-schema
+	     (dynamic-find-base-function '#,to-schema))
+	   (define to-id
+	     (dynamic-find-base-function
+	       '#,to-id))
+	   (define s
+	     (in-entities
+	       (conn)
+	       (~>
+		 (#,'from #,(sqlify (plural to-name)) #:as x)
+		 (where (= x.id
+			   ,(to-id model)))
+		 (project-onto to-schema))))
 
-           (define l
-             (sequence->list s))  
-           (if (empty? l)
-             #f
-             (first l))
+	   (define l
+	     (sequence->list s))  
+	   (if (empty? l)
+	       #f
+	       (first l))
 
-           ))]))
+
+
+
+	   ))]))
 
 (define-for-syntax (sqlify s)
   (local-require racket/string)
@@ -374,11 +377,13 @@
                         ([field-name field-things ...] ...)) 
 
          (module+ schema-info
-           (provide schema-info) 
+           (provide schema-info relations) 
 
            (define schema-info
              '(name
-                ([field-name field-things ...] ...))))
+                ([field-name field-things ...] ...)))
+	   
+	   (define relations '()))
 
          (provide #,name-fields)
 

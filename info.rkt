@@ -6,6 +6,7 @@
                ;"raart"
                "ansi-color"
                "https://github.com/thoughtstem/website.git"
+               "https://github.com/thoughtstem/website-js.git"
                "https://github.com/thoughtstem/english.git"
                ))
 (define build-deps '("scribble-lib" "racket-doc" "rackunit-lib"))
