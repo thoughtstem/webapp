@@ -1,4 +1,4 @@
-#lang racket
+#lang at-exp racket
 
 (provide conn 
          env
@@ -10,7 +10,10 @@
          db-name
          db-user
          db-password
-         load-current-env!)
+         load-current-env!
+
+         get-cid
+         )
 
 (require db file/glob)
 
@@ -38,7 +41,7 @@
                       (define dir 
                         (~a (last (explode-path (current-directory)))))
 
-                      (displayln (~a "Not in docker container.  Assuming current directory is the app directory: " dir))
+                      ;(displayln (~a "Not in docker container.  Assuming current directory is the app directory: " dir))
 
                       dir 
                       )])
@@ -91,3 +94,7 @@
                        '/environment/main))  
                    #f)))
 
+(define (get-cid)
+    (string-trim (with-output-to-string
+      (lambda () @system{
+                   @~a{docker ps -q --filter ancestor=@(pkg-name) --format="{{.ID}}"}}))))

@@ -19,11 +19,14 @@
   (define dev-pkgs 
     args)
 
-  (displayln "Stopping any running containers") 
+  (displayln "Stopping any running containers")
   @system{
-    @~a{
-      docker rm $(docker stop $(docker ps -a -q --filter ancestor=@(pkg-name) --format="{{.ID}}"))   
-    }
+    @~a{docker stop @(get-cid)}
+  }
+  @system{
+    @;@~a{docker rm $(docker stop $(docker ps -a -q --filter ancestor=@(pkg-name) --format="{{.ID}}"))}
+    @;@~a{docker rm @(get-cid)}
+    @~a{docker container prune --force}
   }
 
   (displayln "Starting new container") 
@@ -33,13 +36,14 @@
     @~a{-v @|pkg|:/root/.racket/7.5/pkgs/@|pkg-name|})
 
   @system{
-  @~a{docker run -dt -p 8080:8080 -v `pwd`:/@(pkg-name) @(string-join (map patch-in dev-pkgs) " ") @(pkg-name) } 
+     @;@~a{docker run -dt -p 8080:8080 -v $(pwd) -w /@(pkg-name) @(string-join (map patch-in dev-pkgs) " ") @(pkg-name)}
+     @~a{docker run -dt -p 8080:8080 -v @(path->string (current-directory)) -w /@(pkg-name) @(string-join (map patch-in dev-pkgs) " ") @(pkg-name)}
   }
 
-  (displayln "Starting postgres") 
+  (displayln "Starting postgres")
   @system{
-    @~a{
-      docker exec `docker ps -q --filter ancestor=@(pkg-name) --format="{{.ID}}"` bash -c "/etc/init.d/postgresql start;" 
-    } 
-  })
+    @;@~a{docker exec $(docker ps -q --filter ancestor=@(pkg-name) --format="{{.ID}}") bash -c "/etc/init.d/postgresql start;"}
+    @~a{docker exec @(get-cid) bash -c "/etc/init.d/postgresql start;"}
+  }
+)
 
