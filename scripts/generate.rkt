@@ -13,7 +13,7 @@
   (define fields (map (curryr string-split ":") (rest args)))
 
   ;Just to trigger an error if user passes in an unsupported type
-  (map seed-value-of-type (map second fields))
+  (map type->db-type (map second fields))
 
   (maybe-create-dir (model-dir name))
 
