@@ -41,12 +41,15 @@
 
   (if (not query)
     (hash)
-    (make-hash query)))
+    (make-hash 
+      (map 
+	(lambda (p)
+	  (cons (car p)
+		(maybe-string->number
+		  (cdr p))))
+	query))))
 
 (define (hashify-data d)
-  ;something=va1&something_else=val2
-  ;  Gotta parse this stuff out into a hash
-
   (define raw-pairs
     (string-split d "&"))
 
@@ -60,5 +63,14 @@
          pairs) )      
 
   (apply hash
-           (apply append decoded-pairs))) 
+         (apply append decoded-pairs))) 
+
+
+
+(define (maybe-string->number s)
+  (define maybe-n
+    (and (string? s)
+	 (string->number s)))
+
+  (or maybe-n s))
 
