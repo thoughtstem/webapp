@@ -33,7 +33,8 @@
          get-type
          all-models-plural
          
-         define-seed)
+         define-seed
+	 get-relations)
 
 (require webapp/environment/util
          (for-syntax english
@@ -55,6 +56,28 @@
       (~a (pkg-name) "/models/base"))
     f-name))
 
+(define (get-relations module-base-path)
+  (define schema-info-module
+    `(submod ,module-base-path schema-info))
+
+  (dynamic-require schema-info-module #f)
+
+  (define-values (functions macros)
+    (module->exports schema-info-module))
+
+  (define relation-names
+    (filter-not (curry eq? 'schema-info)
+		(map first
+		     (rest
+		       (first functions)))))
+
+  (apply hash
+	 (flatten
+	   (map 
+	     (lambda (n)
+	       (list n (dynamic-require schema-info-module n)))
+	     relation-names)))
+  )
 
 (define (all-models-plural)
   ;If we want a singular version, we should probably track them as define-schema is used,
@@ -174,9 +197,12 @@
            
            (if (empty? l)
              #f
-             (first l))
-
-           ))]))
+             (first l)))
+	 
+	 (module+ schema-info
+		  (provide #,from->to) 
+		  (define #,from->to 'has-one))
+	 )]))
 
 (define-syntax (has-many stx)
   (syntax-parse stx
@@ -205,25 +231,28 @@
                   (syntax->datum #'to)))
 
      #`(begin
-         (provide #,from->tos)
-         (define (#,from->tos model)
-           (log '#,from->tos model)
+	 (provide #,from->tos)
+	 (define (#,from->tos model)
+	   (log '#,from->tos model)
 
-           (define to-schema
-             (dynamic-find-base-function
-               '#,to-schema))
-           (define s
-             (in-entities
-               (conn)
-               (~>
-                 (#,'from #,(sqlify (plural to-name)) #:as x)
-                 (where (= #,x.from_id
-                           ,(#,from-id model)))
-                 (project-onto to-schema))))
+	   (define to-schema
+	     (dynamic-find-base-function
+	       '#,to-schema))
+	   (define s
+	     (in-entities
+	       (conn)
+	       (~>
+		 (#,'from #,(sqlify (plural to-name)) #:as x)
+		 (where (= #,x.from_id
+			   ,(#,from-id model)))
+		 (project-onto to-schema))))
 
-           (sequence->list s)
+	   (sequence->list s))
 
-           ))]))
+	 (module+ schema-info
+		  (provide #,from->tos) 
+		  (define #,from->tos 'has-many))
+	 )]))
 
 (define-syntax (belongs-to stx)
   (syntax-parse stx
@@ -276,12 +305,12 @@
 	     (sequence->list s))  
 	   (if (empty? l)
 	       #f
-	       (first l))
-
-
-
-
-	   ))]))
+	       (first l)) )
+	 
+	 (module+ schema-info
+		  (provide #,from->to) 
+		  (define #,from->to 'belongs-to))
+	 )]))
 
 (define-for-syntax (sqlify s)
   (local-require racket/string)
@@ -377,13 +406,11 @@
                         ([field-name field-things ...] ...)) 
 
          (module+ schema-info
-           (provide schema-info relations) 
+           (provide schema-info) 
 
            (define schema-info
              '(name
-                ([field-name field-things ...] ...)))
-	   
-	   (define relations '()))
+                ([field-name field-things ...] ...))))
 
          (provide #,name-fields)
 
