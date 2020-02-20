@@ -1,6 +1,7 @@
 #lang racket
 
 (provide response/html
+	 response/html/cors
 	 response/html/content)
 
 (require 
@@ -20,4 +21,20 @@
 (define (response/html/content html)
   (response/html
     (content html)))
+
+(define (response/html/cors html)
+  (local-require 
+    web-server/http/response-structs
+    web-server/http/request-structs)
+
+  (define r (response/html html))
+
+  (struct-copy response r
+	       [headers 
+		 (append
+		   (list
+		     (header 
+		       #"Access-Control-Allow-Origin"
+		       #"*"))
+		   (response-headers r))]))
 

@@ -157,6 +157,8 @@
     ["integer" "integer"] 
     ["id" "integer"] 
     ["string" "text"] 
+    ["boolean" "boolean"] 
+    ["date" "date"] 
     ["datetime-tz" "timestamptz"] 
     [else (raise (~a "Unsupported type: " t))]))
 
