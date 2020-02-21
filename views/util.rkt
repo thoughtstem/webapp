@@ -50,7 +50,7 @@
 		 (get-fields m)
 		 (get-values m)))
 
-	  (container
+	  (div class: "w-100 p-3 mx-auto"
 	    (card
 	      (table class: "table"
 		     (thead
