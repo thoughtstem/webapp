@@ -11,6 +11,8 @@
            [my-delete! delete!])
 
 	 cache-log
+	 with-query-cache
+
          (struct-out model-error)
 
          (except-out (all-from-out deta)
@@ -33,6 +35,7 @@
          get-values
          get-type
          all-models-plural
+
          
          define-seed
 	 get-relations)
@@ -102,6 +105,10 @@
 (define cache-log (make-parameter #f))
 (define query-cache (make-parameter (make-hash)))
 
+(define-syntax-rule (with-query-cache statements ...)
+   (parameterize ([query-cache (make-hash)])
+		 statements ...))
+
 (define (reset-query-cache)
   (query-cache (make-hash)))
 
@@ -109,8 +116,7 @@
   #;
   (when (query-cache) ;SHould make an explicit logging param when we want to provide this feature...
         (pretty-print msg))
-  (void)
-  )
+  (void))
 
 (define (query->hash-key query-type input-model)
   (list query-type
