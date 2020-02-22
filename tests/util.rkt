@@ -20,11 +20,14 @@
     (parameterize ([env "test"])
       ;Recreate the test db every time a suite of tests runs.  Makes sure that tests don't interfer with each other.
       (displayln-color 'blue "DROPPING DB")
-      (drop-db)
+      (with-output-to-string
+	(thunk* (drop-db)))
       (displayln-color 'blue "CREATING DB")
-      (create-db)
+      (with-output-to-string 
+	(thunk* (create-db)))
       (displayln-color 'blue "SEEDING DB")
-      (seed-db)
+      (with-output-to-string 
+	(thunk* (seed-db)))
       (displayln-color 'blue "RUNNING TESTS")
       exp ...      
       (void)

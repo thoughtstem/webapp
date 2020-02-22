@@ -10,6 +10,7 @@
            [my-update! update!]
            [my-delete! delete!])
 
+	 cache-log
          (struct-out model-error)
 
          (except-out (all-from-out deta)
@@ -98,54 +99,83 @@
                       (model-error e))])
                  lines ...))
 
-(provide with-query-cache)
+(define cache-log (make-parameter #f))
+(define query-cache (make-parameter (make-hash)))
 
-(define query-cache (make-parameter (hash)))
-
-(define-syntax-rule (with-query-cache expr ...)
-  (parameterize ([query-cache (hash)])
-    expr ...))
+(define (reset-query-cache)
+  (query-cache (make-hash)))
 
 (define (log . msg)
-  (define msg2
-    (if (and (= 2 (length msg)) (entity? (second msg)))
-	(list-set msg 1 
-		  (get (second msg) 'id)
-		  #;
-		  (~a (second msg) #:max-width 20))
-	msg))
-
-  (when (not (hash-has-key? (query-cache) msg2))
-    #;
-    (displayln `("Cache miss" ,msg2))
-    (query-cache (hash-set (query-cache) msg2 #t)))
-
   #;
-  (pretty-print msg2)
-  
-  (void))
+  (when (query-cache) ;SHould make an explicit logging param when we want to provide this feature...
+        (pretty-print msg))
+  (void)
+  )
+
+(define (query->hash-key query-type input-model)
+  (list query-type
+	(if (entity? input-model)
+	    (get input-model 'id)
+	    input-model ;So it can be a number, string, etc.  
+	    )))
+
+(define (get-from-cache query-type input-model)
+  (if (not (query-cache))
+      #f
+      (begin
+	(when (cache-log)
+	  (displayln (list "Got from cache!" (query->hash-key query-type input-model))))
+	(hash-ref (query-cache) 
+		  (query->hash-key query-type input-model)
+		  #f))))
+
+(define-syntax-rule (try-cache [query-type input-model] 
+			       statements ...)
+
+  (let ([cache-value (get-from-cache query-type input-model)])
+    (or cache-value
+        (let ()
+	  (when (cache-log)
+	    (displayln (list "Cache miss" (query->hash-key query-type input-model))))
+
+	  (define new-value-to-cache
+	    (let () statements ...))
+	  
+	  (when (query-cache)
+	    (hash-set! (query-cache)
+		       (query->hash-key query-type input-model)
+		       new-value-to-cache))
+	 
+	  new-value-to-cache
+	  ))))
+
 
 (define (my-insert-one! model)
   (log 'insert-one!)
+  (reset-query-cache)
   (catch-model-errors
     (insert-one! (conn) model)))
 
 (define (my-update! . models)
   (log 'update!)
+  (reset-query-cache)
   (apply update-one! (conn) models))
 
 (define (my-update-one! model)
   (log 'update-one!)
+  (reset-query-cache)
   (catch-model-errors
     (update-one! (conn) model))   )
 
 (define (my-delete! . model)
   (log 'delete!)
+  (reset-query-cache)
   (catch-model-errors
     (apply delete! (conn) model)))
 
 (define (my-delete-one! model)
   (log 'delete-one!)
+  (reset-query-cache)
   (catch-model-errors
     (delete-one! (conn) model)))
 
@@ -180,24 +210,29 @@
          (provide #,from->to)
          (define (#,from->to model)
            (log '#,from->to model)
-           (define to-schema
-             (dynamic-find-base-function '#,to-schema))
 
-           (define s
-             (in-entities
-               (conn)
-               (~>
-                 (#,'from #,(sqlify (plural to-name)) #:as x)
-                 (where (= #,x.from_id
-                           ,(#,from-id model)))
-                 (limit 1)
-                 (project-onto to-schema))))
+	   (try-cache ['#,from->to model]
 
-           (define l (sequence->list s))
-           
-           (if (empty? l)
-             #f
-             (first l)))
+	     (define to-schema
+	       (dynamic-find-base-function '#,to-schema))
+
+	     (define s
+	       (in-entities
+		 (conn)
+		 (~>
+		   (#,'from #,(sqlify (plural to-name)) #:as x)
+		   (where (= #,x.from_id
+			     ,(#,from-id model)))
+		   (limit 1)
+		   (project-onto to-schema))))
+
+	     (define l (sequence->list s))
+
+	     (if (empty? l)
+		 #f
+		 (first l)))
+	   
+	   )
 	 
 	 (module+ schema-info
 		  (provide #,from->to) 
@@ -206,7 +241,7 @@
 
 (define-syntax (has-many stx)
   (syntax-parse stx
-    [(_ from to)
+    [(_ from to additional-db-constraints ...)
      (define from->tos
        (format-id #'from
                   "~a->~a" 
@@ -235,19 +270,22 @@
 	 (define (#,from->tos model)
 	   (log '#,from->tos model)
 
-	   (define to-schema
-	     (dynamic-find-base-function
-	       '#,to-schema))
-	   (define s
-	     (in-entities
-	       (conn)
-	       (~>
-		 (#,'from #,(sqlify (plural to-name)) #:as x)
-		 (where (= #,x.from_id
-			   ,(#,from-id model)))
-		 (project-onto to-schema))))
+	   (try-cache ['#,from->tos model]
+	      (define to-schema
+		(dynamic-find-base-function
+		    '#,to-schema))
+	      (define s
+		(in-entities
+		  (conn)
+		  (~>
+		    (#,'from #,(sqlify (plural to-name)) #:as x)
+		    (where (= #,x.from_id
+			      ,(#,from-id model)))
+		    ;Additional constraints?
+		    additional-db-constraints ...
+		    (project-onto to-schema))))
 
-	   (sequence->list s))
+	      (sequence->list s)))
 
 	 (module+ schema-info
 		  (provide #,from->tos) 
@@ -287,25 +325,27 @@
 	 (provide #,from->to)
 	 (define (#,from->to model)
 	   (log '#,from->to model)
-	   (define to-schema
-	     (dynamic-find-base-function '#,to-schema))
-	   (define to-id
-	     (dynamic-find-base-function
-	       '#,to-id))
-	   (define s
-	     (in-entities
-	       (conn)
-	       (~>
-		 (#,'from #,(sqlify (plural to-name)) #:as x)
-		 (where (= x.id
-			   ,(to-id model)))
-		 (project-onto to-schema))))
 
-	   (define l
-	     (sequence->list s))  
-	   (if (empty? l)
-	       #f
-	       (first l)) )
+	   (try-cache ['#,from->to model]
+		      (define to-schema
+			(dynamic-find-base-function '#,to-schema))
+		      (define to-id
+			(dynamic-find-base-function
+			  '#,to-id))
+		      (define s
+			(in-entities
+			  (conn)
+			  (~>
+			    (#,'from #,(sqlify (plural to-name)) #:as x)
+			    (where (= x.id
+				      ,(to-id model)))
+			    (project-onto to-schema))))
+
+		      (define l
+			(sequence->list s))  
+		      (if (empty? l)
+			  #f
+			  (first l)) ))
 	 
 	 (module+ schema-info
 		  (provide #,from->to) 
@@ -373,32 +413,36 @@
 
            (define (#,find-Xs-by-F v)
 	     (log '#,find-Xs-by-F v)
-             (define s
-               (in-entities
-                 (conn)
-                 (~>
-                   (#,'from name #:as x)
-                   (where (= #,x.field ,v))
-                   (project-onto #,name-schema))))
+
+	     (try-cache ['#,find-Xs-by-F v]
+			(define s
+			  (in-entities
+			    (conn)
+			    (~>
+			      (#,'from name #:as x)
+			      (where (= #,x.field ,v))
+			      (project-onto #,name-schema))))
 
 
-             (sequence->list s))
+			(sequence->list s))
+	     )
            
            (define (#,find-X-by-F v)
 	     (log '#,find-X-by-F v)
-             (define s
-               (in-entities
-                 (conn)
-                 (~>
-                   (#,'from name #:as x)
-                   (where (= #,x.field ,v))
-                   (limit 1)
-                   (project-onto #,name-schema))))
+
+	     (try-cache ['#,find-X-by-F v]
+			(define s
+			  (in-entities
+			    (conn)
+			    (~>
+			      (#,'from name #:as x)
+			      (where (= #,x.field ,v))
+			      (limit 1)
+			      (project-onto #,name-schema))))
 
 
-             (define l (sequence->list s)) 
-             (if (empty? l) #f (first l)))
-           ))
+			(define l (sequence->list s)) 
+			(if (empty? l) #f (first l))))))
 
      #`(begin
          (define-schema name
