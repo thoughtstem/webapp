@@ -1,7 +1,7 @@
 #lang at-exp racket
 
 
-;Pivote to stateless, but with guarantees:
+;Pivot to stateless, but with guarantees:
 ;  * You can call server side functions with js/call
 ;    - Those functions will, in turn be called with current-req set.  Author them with that assumption.
 ;  * You can call js/call anywhere you could write @js code.  All endpoints will set up embed/url approrpriately.  Whatever that means...

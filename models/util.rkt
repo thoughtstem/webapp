@@ -12,6 +12,7 @@
 
 	 cache-log
 	 with-query-cache
+	 reset-query-cache
 
          (struct-out model-error)
 
@@ -103,18 +104,20 @@
                  lines ...))
 
 (define cache-log (make-parameter #f))
-(define query-cache (make-parameter (make-hash)))
+(define query-cache (make-hash))
 
 (define-syntax-rule (with-query-cache statements ...)
-   (parameterize ([query-cache (make-hash)])
-		 statements ...))
+   (begin
+     (reset-query-cache)
+     ;(displayln "with-query-cache as non parameter / caching enabled.......")
+     statements ...))
 
 (define (reset-query-cache)
-  (query-cache (make-hash)))
+  (set! query-cache (make-hash)))
 
 (define (log . msg)
   #;
-  (when (query-cache) ;SHould make an explicit logging param when we want to provide this feature...
+  (when query-cache ;SHould make an explicit logging param when we want to provide this feature...
         (pretty-print msg))
   (void))
 
@@ -126,12 +129,12 @@
 	    )))
 
 (define (get-from-cache query-type input-model)
-  (if (not (query-cache))
+  (if (not query-cache)
       #f
       (begin
 	(when (cache-log)
 	  (displayln (list "Got from cache!" (query->hash-key query-type input-model))))
-	(hash-ref (query-cache) 
+	(hash-ref query-cache 
 		  (query->hash-key query-type input-model)
 		  #f))))
 
@@ -147,8 +150,8 @@
 	  (define new-value-to-cache
 	    (let () statements ...))
 	  
-	  (when (query-cache)
-	    (hash-set! (query-cache)
+	  (when query-cache
+	    (hash-set! query-cache
 		       (query->hash-key query-type input-model)
 		       new-value-to-cache))
 	 

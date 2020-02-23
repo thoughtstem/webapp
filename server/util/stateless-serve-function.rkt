@@ -30,19 +30,22 @@
 
 ;Like js-url/call, but the function must be explicitly defined at the top-level of a module -- can't be a lambda or thunk :(
 ;   But it seems that if we write our own versions of functions like curry/curryr -- those work...
+
+(require webapp/models/util)
 (define (js-url/stateless/call f . args)
 
   (apply js-url
 	 (~s
 	   ((stateless/embed/url)
 	    (lambda (r . args)
-	      (apply 
-		(stateless/serve-function ;Fixed it???
-		  (lambda ()
-		    (response/html
-		      (apply f (demartial-client-args r)))))
-		(cons r args))
-	      )
+	      (with-query-cache
+		(apply 
+		  (stateless/serve-function ;Fixed it???
+		    (lambda ()
+		      (response/html
+			(apply f (demartial-client-args r)))))
+		  (cons r args))
+		))
 	    ))
 
 	 "/"
