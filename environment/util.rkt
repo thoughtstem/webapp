@@ -66,17 +66,23 @@
     (getenv "DB_HOST")
     (~a "localhost")))
 
+(define (no-dashes s)
+  (string-replace s "-" "_"))
+
 (define (db-port)
   (~a 5432))
 
 (define (db-name)
-  (~a (app-name) "_" (env)))
+  (~a (no-dashes (app-name))
+      "_" (env)))
 
 (define (db-user)
-  (~a (app-name) "_" (env)))
+  (~a (no-dashes (app-name))
+      "_" (env)))
 
 (define (db-password)
-  (~a (app-name) "_" (env)))
+  (~a (no-dashes (app-name))
+      "_" (env)))
 
 (define last-connection #f)
 
@@ -85,9 +91,9 @@
     (set! last-connection
       (postgresql-connect
         #:server   (db-host)
-        #:user     (~a (app-name) "_" (env)) 
-        #:database (~a (app-name) "_" (env))
-        #:password (~a (app-name) "_" (env)))))
+        #:user     (db-user) 
+        #:database (db-name)
+        #:password (db-password) )))
 
   ;TODO: Pooling and virtual connections.
   last-connection)

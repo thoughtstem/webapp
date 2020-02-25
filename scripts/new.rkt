@@ -167,6 +167,10 @@
           (void))  
         }))
 
+
+(define (fix-dashes s)
+  (string-replace s "-" "_"))
+
 (define (Dockerfile name)  
   (page '("Dockerfile")
         @~a{
@@ -179,10 +183,10 @@
         USER postgres
 
         RUN /etc/init.d/postgresql start && sleep 5 &&\
-        psql --command "CREATE USER @|name|_dev WITH SUPERUSER PASSWORD '@|name|_dev';" &&\
-        psql --command "CREATE USER @|name|_test WITH SUPERUSER PASSWORD '@|name|_test';" &&\
-        createdb -O @|name|_dev @|name|_dev &&\
-        createdb -O @|name|_test @|name|_test
+        psql --command "CREATE USER @|(fix-dashes name)|_dev WITH SUPERUSER PASSWORD '@|(fix-dashes name)|_dev';" &&\
+        psql --command "CREATE USER @|(fix-dashes name)|_test WITH SUPERUSER PASSWORD '@|(fix-dashes name)|_test';" &&\
+        createdb -O @|(fix-dashes name)|_dev @|name|_dev &&\
+        createdb -O @|(fix-dashes name)|_test @|name|_test
 
         USER root
 
