@@ -185,8 +185,8 @@
         RUN /etc/init.d/postgresql start && sleep 5 &&\
         psql --command "CREATE USER @|(fix-dashes name)|_dev WITH SUPERUSER PASSWORD '@|(fix-dashes name)|_dev';" &&\
         psql --command "CREATE USER @|(fix-dashes name)|_test WITH SUPERUSER PASSWORD '@|(fix-dashes name)|_test';" &&\
-        createdb -O @|(fix-dashes name)|_dev @|name|_dev &&\
-        createdb -O @|(fix-dashes name)|_test @|name|_test
+        createdb -O @|(fix-dashes name)|_dev @|(fix-dashes name)|_dev &&\
+        createdb -O @|(fix-dashes name)|_test @|(fix-dashes name)|_test
 
         USER root
 

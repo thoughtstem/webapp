@@ -39,7 +39,8 @@
 
          
          define-seed
-	 get-relations)
+	 get-relations
+	 with-read-only-database)
 
 (require webapp/environment/util
          (for-syntax english
@@ -51,6 +52,13 @@
          syntax/parse/define
          file/glob
          (only-in db query-exec))
+
+
+(define read-only (make-parameter #f))
+
+(define-syntax-rule (with-read-only-database statements ...)
+		    (parameterize ([read-only #t])
+		      statements ...))
 
 (define (dynamic-find-base-function f-name)
   ;A better approach in general would be to make
@@ -160,29 +168,45 @@
 
 
 (define (my-insert-one! model)
+  (when (read-only)
+    (error "The database is in read only mode"))
+
   (log 'insert-one!)
   (reset-query-cache)
   (catch-model-errors
-    (insert-one! (conn) model)))
+    (insert-one! (conn) model))
+  )
 
 (define (my-update! . models)
+  (when (read-only)
+    (error "The database is in read only mode"))
+
   (log 'update!)
   (reset-query-cache)
   (apply update-one! (conn) models))
 
 (define (my-update-one! model)
+  (when (read-only)
+    (error "The database is in read only mode"))
+
   (log 'update-one!)
   (reset-query-cache)
   (catch-model-errors
     (update-one! (conn) model))   )
 
 (define (my-delete! . model)
+  (when (read-only)
+    (error "The database is in read only mode"))
+
   (log 'delete!)
   (reset-query-cache)
   (catch-model-errors
     (apply delete! (conn) model)))
 
 (define (my-delete-one! model)
+  (when (read-only)
+    (error "The database is in read only mode"))
+
   (log 'delete-one!)
   (reset-query-cache)
   (catch-model-errors
