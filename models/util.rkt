@@ -34,15 +34,17 @@
          get
          get-fields
          get-values
-         get-type
-         all-models-plural
 
-         
          define-seed
-	 get-relations
-	 with-read-only-database)
+
+	 with-read-only-database
+
+	 (all-from-out 
+	   webapp/models/util/reflection))
 
 (require webapp/environment/util
+	 webapp/models/util/reflection
+	 english
          (for-syntax english
                      webapp/environment/util)
          deta
@@ -69,39 +71,6 @@
       (~a (pkg-name) "/models/base"))
     f-name))
 
-(define (get-relations module-base-path)
-  (define schema-info-module
-    `(submod ,module-base-path schema-info))
-
-  (dynamic-require schema-info-module #f)
-
-  (define-values (functions macros)
-    (module->exports schema-info-module))
-
-  (define relation-names
-    (filter-not (curry eq? 'schema-info)
-		(map first
-		     (rest
-		       (first functions)))))
-
-  (apply hash
-	 (flatten
-	   (map 
-	     (lambda (n)
-	       (list n (dynamic-require schema-info-module n)))
-	     relation-names)))
-  )
-
-(define (all-models-plural)
-  ;If we want a singular version, we should probably track them as define-schema is used,
-  ;  rather than assuming that the file structure is some kind of source of truth (even though is sort of is for now)
-
-  (define model-files (glob (~a "/" (pkg-name) "/models/*/base.rkt")) )
-  (map (compose 
-         string->symbol
-         (lambda (f)
-           (list-ref (string-split (~a f) "/") 2))) 
-       model-files))
 
 (struct model-error (e) #:transparent)
 
@@ -556,16 +525,6 @@
                              (string->symbol (~a type "-" field-name))))
 
   (f model))
-
-(define (get-type model)
-  (string->symbol
-    (second
-      (string-split 
-        (symbol->string
-          (vector-ref 
-            (struct->vector model)
-            0)) 
-        ":"))))
 
 (define (get-fields model)
   (define f 
