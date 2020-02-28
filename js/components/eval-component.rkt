@@ -1,38 +1,24 @@
 #lang at-exp web-server
 
-(provide eval-component)
+(provide eval-component
+	 string->component
+	 ;Move this...
+	 editor-component)
 
 (require webapp/js
          webapp/models/util
          webapp/server/client-communication)
 
-(define (eval-component text-value
-                        edit-function
-                        module-name
-			#:wrapper (wrapper (lambda (x) x))
-                        #:pre-content (pre-content #f))
-
-  (define rendered-value
-    (string->component text-value module-name wrapper))
-
-
+(define (editor-component initial-value
+			  #:on-change (on-change noop))
   (enclose
     (span id: (ns "main")
 	  (include-js "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js")
 	  (include-css "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.css")
 
-	  (card
-	    (card-body
-	      pre-content 
-	      (textarea id: (ns "input")
-			text-value)
-
-	      (hr)
-
-	      (div id: (ns "output")
-		     rendered-value ))))
+	  (textarea id: (ns "input")
+		    initial-value))
     (script ([input  (ns "input")]
-	     [output (ns "output")]
 	     [main   (ns "main")]
 	     [editor
 	       @js{
@@ -54,24 +40,50 @@
          @js{		 
 	  var editor = CodeMirror.fromTextArea(@getEl{@input}, { lineNumbers: true });
 	  editor.on("change",
-		    ()=>@(call 'rerender))
+		    ()=>@(on-change @js{editor.getValue()}))
 
 	  return editor })
+       )))
 
-       (function (rerender)
+(define (eval-component text-value
+                        edit-function
+                        module-name
+			#:wrapper (wrapper (lambda (x) x))
+                        #:pre-content (pre-content #f))
+
+  (define rendered-value
+    (string->component text-value module-name wrapper))
+
+
+  (enclose
+    (span id: (ns "main")
+	  (card
+	    (card-body
+	      pre-content 
+	      (editor-component text-value
+				#:on-change (callback 'rerender))
+
+	      (hr)
+
+	      (div id: (ns "output")
+		     rendered-value ))))
+    (script ([output (ns "output")]
+	     [main   (ns "main")])
+       (function (rerender val)
          (js/call
 	   (lambda (val)
 	     (edit-function val)
 	     (string->component val module-name wrapper))
-	   @js{@editor .getValue()}
+	   val
 	   #:then (callback 'updateUI)))
+       
+       (function (updateUI ui)
+		 (js-inject output ui)))))
 
-       (function (updateUI newUI)
-         (js-inject output newUI)))))
 
 
 
-(define (string->component s module-name wrapper)
+(define (string->component s module-name (wrapper identity))
   (dynamic-require module-name #f)
   (if (not (string-prefix? s "("))
       (div s)
