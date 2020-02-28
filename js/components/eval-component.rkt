@@ -9,10 +9,11 @@
 (define (eval-component text-value
                         edit-function
                         module-name
+			#:wrapper (wrapper (lambda (x) x))
                         #:pre-content (pre-content #f))
 
   (define rendered-value
-    (string->component text-value module-name))
+    (string->component text-value module-name wrapper))
 
 
   (enclose
@@ -29,7 +30,7 @@
 	      (hr)
 
 	      (div id: (ns "output")
-		   rendered-value) )))
+		     rendered-value ))))
     (script ([input  (ns "input")]
 	     [output (ns "output")]
 	     [main   (ns "main")]
@@ -61,7 +62,7 @@
          (js/call
 	   (lambda (val)
 	     (edit-function val)
-	     (string->component val module-name))
+	     (string->component val module-name wrapper))
 	   @js{@editor .getValue()}
 	   #:then (callback 'updateUI)))
 
@@ -70,7 +71,7 @@
 
 
 
-(define (string->component s module-name)
+(define (string->component s module-name wrapper)
   (dynamic-require module-name #f)
   (if (not (string-prefix? s "("))
       (div s)
@@ -85,7 +86,8 @@
 				    (exn-message e))))])
 
 		     (with-read-only-database
-		       (eval
-			 (read (open-input-string s))
-			 (module->namespace
-                          module-name))))))
+		       (wrapper
+			 (eval
+			   (read (open-input-string s))
+			   (module->namespace
+			     module-name)))))))

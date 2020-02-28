@@ -64,14 +64,14 @@
     (~s
       ((stateless/embed/url)
        (lambda (r . args)
-	(define h
-	  (request->params r))
-	 (apply 
-	   (stateless/serve-function ;Fixed it???
-	     (lambda ()
-	       (response/html
-		 (f h))))
-	   (cons r args)))))
+	 (with-query-cache
+	   (define h (request->params r))
+	   (apply 
+	     (stateless/serve-function ;Fixed it???
+	       (lambda ()
+		 (response/html
+		   (f h))))
+	     (cons r args))))))
 
     ;Client-side: Package up the hash as query params in the URL.
     "?"

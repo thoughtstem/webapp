@@ -7,7 +7,7 @@
 
 (define (clear-fg)
   ;(draw-here (fg 'black (text " ")))
-  (with-colors 'black
+  (with-colors 'white
     (lambda () (displayln " ")))
   )
 
@@ -15,5 +15,6 @@
   ;(draw-here (fg c (text s)))
   (with-colors c
     (lambda () (displayln s)))
-  (clear-fg))
+  (clear-fg)
+  )
 
