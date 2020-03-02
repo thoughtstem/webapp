@@ -1,10 +1,8 @@
 #lang at-exp racket
 
-(provide build docker-image-name)
+(provide build)
 
 (require webapp/environment/util)
-
-(define custom-docker-image-name (make-parameter #f))
 
 (define (build . args)
   (load-dev-prefs!)
