@@ -5,7 +5,7 @@
 (require webapp/environment/util)
 
 (define (bash)
+  (load-dev-prefs!)
   @system{
-    @;@~a{docker exec -it $(docker ps -q --filter ancestor=@(pkg-name) --format="{{.ID}}") bash}
     @~a{docker exec -it @(get-cid) bash} 
   })

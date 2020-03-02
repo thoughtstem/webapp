@@ -16,7 +16,11 @@
 	 
 	 prod?
 	 dev?
-	 test?)
+	 test?
+	 
+	 load-dev-prefs!
+	 host-port
+	 docker-image-name)
 
 (require db file/glob)
 
@@ -116,9 +120,29 @@
                        '/environment/main))  
                    #f)))
 
+(define docker-image-name (make-parameter #f))
+(define host-port (make-parameter 8080))
+
+(define (load-dev-prefs!)
+  (define prefs-file
+    (build-path (current-directory)
+		".webapp-dev-prefs.rkt"))
+
+  (when (file-exists? prefs-file)
+    (displayln "Prefs file detected.  Loading...")
+    (dynamic-require prefs-file #f)
+
+    (displayln
+      (~a "Host port is: " 
+	  (host-port)))
+
+    (displayln
+      (~a "Docker image name: " 
+	  (docker-image-name)))))
+
 (define (get-cid)
-    (string-trim (with-output-to-string
-      (lambda () @system{
-                   @~a{docker ps -q --filter ancestor=@(pkg-name) --format="{{.ID}}"}}))))
+  (string-trim (with-output-to-string
+		 (lambda () @system{
+		   @~a{docker ps -q --filter ancestor=@(or (docker-image-name) (pkg-name)) --format="{{.ID}}"}}))))
 
 
