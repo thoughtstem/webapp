@@ -24,6 +24,7 @@
 		".webapp-dev-prefs.rkt"))
 
   (when (file-exists? prefs-file)
+    (displayln "Taking source code from: " (pkg-name))
     (displayln "Prefs file detected.  Loading...")
     (dynamic-require
       prefs-file
