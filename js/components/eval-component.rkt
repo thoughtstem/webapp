@@ -10,10 +10,11 @@
          webapp/server/client-communication)
 
 (define (editor-component initial-value
-			  #:on-change (on-change noop))
+			  #:on-change (on-change #f))
   (enclose
     (span id: (ns "main")
 	  (include-js "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js")
+	  (include-js "https://codemirror.net/mode/scheme/scheme.js")
 	  (include-css "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.css")
 
 	  (textarea id: (ns "input")
@@ -25,10 +26,16 @@
 	       function(){
 	          if(!window.CodeMirror){ //Load it if the include-js above didn't work, which happens if the component is injected after the page loads.  The script tag doesn't run
   
-                  fetch("https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js").then((r)=>r.text()).then((t)=>{
-															       eval(t); 
-															       @editor = @(call 'setupEditor) 
-															       })
+			  fetch("https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js")
+			  .then((r)=>r.text()).then((t)=>{
+			     eval(t); 
+			     fetch("https://codemirror.net/mode/scheme/scheme.js")
+			     .then((r)=>r.text()).then((t)=>{
+			        console.log("Got scheme mode")
+				eval(t); 
+				editor = @(call 'setupEditor) 
+			     })
+			  })
 
 		  } else {
 		    return @(call 'setupEditor)
@@ -39,8 +46,14 @@
        (function (setupEditor)
          @js{		 
 	  var editor = CodeMirror.fromTextArea(@getEl{@input}, { lineNumbers: true });
-	  editor.on("change",
-		    ()=>@(on-change @js{editor.getValue()}))
+
+	  @(if on-change
+	     @js{
+	     editor.on("change",
+		       ()=>@(on-change @js{editor.getValue()}))}
+	     @js{})
+
+	  editor.setOption("mode", "scheme");
 
 	  return editor })
        )))
@@ -92,10 +105,11 @@
 			(lambda (e)
 			  (div class: "alert alert-danger"
 			       (p "There was an error with the code.")
+			       #;
 			       (pre s)
 
 			       (div class: "alert alert-warning"
-				    (exn-message e))))])
+				    (pre (exn-message e)))))])
 
 		     (with-read-only-database
 		       (wrapper

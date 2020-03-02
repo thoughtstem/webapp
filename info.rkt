@@ -17,4 +17,5 @@
 (define compile-omit-paths
   '("scripts"))
 (define raco-commands
-  '(("webapp" webapp/scripts/main "Invokes commands related to webapp" 100)))
+  '(("webapp" webapp/scripts/main 
+     "Invokes commands related to webapp" 100)))

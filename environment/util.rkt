@@ -89,11 +89,15 @@
 (define (conn)
   (when (not last-connection)
     (set! last-connection
-      (postgresql-connect
-        #:server   (db-host)
-        #:user     (db-user) 
-        #:database (db-name)
-        #:password (db-password) )))
+      (with-handlers ([exn:fail? (thunk*
+				   (postgresql-connect
+				     #:server   (db-host)
+				     #:user     (db-user) 
+				     #:database (db-name)
+				     #:password (db-password) )
+				   )])
+		     (sqlite3-connect
+		       #:database (~a "/" (pkg-name) "/data.sqlite")))))
 
   ;TODO: Pooling and virtual connections.
   last-connection)

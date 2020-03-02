@@ -11,11 +11,27 @@
 ;    dest path: /root/.racket/7.5/pkgs/.trash/1580229532-0-webapp
 ;    system error: Invalid cross-device link; errno=18
 
-(provide dev)
+(provide dev
+	 host-port)
 
 (require webapp/environment/util)
 
+(define host-port (make-parameter 8080))
+
 (define (dev . args)
+  (define prefs-file
+    (build-path (current-directory)
+		".webapp-dev-prefs.rkt"))
+
+  (when (file-exists? prefs-file)
+    (displayln "Prefs file detected.  Loading...")
+    (dynamic-require
+      prefs-file
+      #f)
+    
+    (displayln
+      (~a "Host port is: " (host-port))))
+
   (define dev-pkgs 
     args)
 
@@ -36,8 +52,7 @@
     @~a{-v @|pkg|:/root/.racket/7.5/pkgs/@|pkg-name|})
 
   @system{
-     @;@~a{docker run -dt -p 8080:8080 -v $(pwd) -w /@(pkg-name) @(string-join (map patch-in dev-pkgs) " ") @(pkg-name)}
-     @~a{docker run -dt -p 8080:8080 -v @(~a (path->string (current-directory)) ":/" (pkg-name)) @(string-join (map patch-in dev-pkgs) " ") @(pkg-name)}
+     @~a{docker run -dt -p @(~a (host-port) ":8080") -v @(~a (path->string (current-directory)) ":/" (pkg-name)) @(string-join (map patch-in dev-pkgs) " ") @(pkg-name)}
   }
 
   (displayln "Starting postgres")

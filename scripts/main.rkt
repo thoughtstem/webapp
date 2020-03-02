@@ -17,6 +17,9 @@
 (load-current-env!)
 
 (define sub-commands
+  (vector->list
+      (current-command-line-arguments))
+  #;
   (command-line
    #:program (short-program+command-name)
    #:args sub-commands
@@ -44,3 +47,6 @@
 
 (apply function 
        (rest sub-commands))  
+
+
+
