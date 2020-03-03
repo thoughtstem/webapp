@@ -120,7 +120,7 @@
                        '/environment/main))  
                    #f)))
 
-(define docker-image-name (make-parameter #f))
+(define docker-image-name (make-parameter (pkg-name)))
 (define host-port (make-parameter 8080))
 
 (define (load-dev-prefs!)
