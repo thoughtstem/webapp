@@ -14,7 +14,7 @@
 (define all-models (get-all-models all-relations #:mode model-mode))
 
 
-(define (cytoscape-overview all-models all-relations)
+(define (cytoscape-overview all-models all-relations [color1 "black"] [color2 "gray"])
   (local-require racket/hash)
   (set! all-models (map ~a all-models))
 
@@ -75,15 +75,15 @@
    }
    },
   {
-   "selector": ".blue",
+   "selector": ".color1",
    "style": {
-    "text-outline-color": "black",
+    "text-outline-color": "@color1",
    }
    },
   {
-   "selector": ".orange",
+   "selector": ".color2",
    "style": {
-    "text-outline-color": "gray",
+    "text-outline-color": "@color2",
    }
   }
   ],
@@ -144,8 +144,8 @@
 (define (model->node model)
   (define id     model)
   (define color (if (string-contains? model "assignment")
-                    "orange"
-                    "blue"))
+                    "color2"
+                    "color1"))
   @~a{
       { data: { id: '@id'}, classes: 'outline @color'}
       }

@@ -62,7 +62,7 @@
   (with-handlers ([exn:fail? (thunk* (hash))])
 		 (get-relations module-path)))
 
-(define (relations-list)
+(define (relations-list [color1 "black"] [color2 "gray"])
   (local-require racket/hash webapp/js)
   (define all-relations (apply hash-union
 			       (map model-name->relations-hash 
@@ -70,13 +70,16 @@
   (define sorted-list (sort (hash->list all-relations) 
 			    string<?
 			    #:key (compose ~a car)))
-  (apply ul (map (curry relation->list-item #:mode 'plural) 
+  (apply ul (map (curry relation->list-item
+                        #:mode 'plural
+                        #:color1 color1
+                        #:color2 color2)
 		 sorted-list)))
 
 
 ;THIS SHOULD NOT GO HERE.
 ;  Rendering stuff needs to get separated, even if it's rendering for reflection purposes...
-(define (relation->list-item relation #:mode [mode 'default])
+(define (relation->list-item relation #:mode [mode 'default] #:color1 [color1 "black"] #:color2 [color2 "gray"])
   (local-require (only-in webapp/js span li style: color: properties))
 
   (define id     (~a (car relation)))
@@ -92,8 +95,8 @@
     )
   (define (colorize str)
     (define color (if (string-contains? str "assignment")
-		      "black"
-		      "gray"
+		      color2
+		      color1
 		      ))
     (span style: (properties color: color) str))
 
