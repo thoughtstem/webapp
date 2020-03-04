@@ -1,4 +1,4 @@
-#lang racket
+#lang at-exp racket
 ;Here we wrap up deta's functions,
 ;  Partially to avoid passing the db conneciton around.
 ;  Partially to future-proof things (who knows if we will keep using deta)
@@ -23,6 +23,8 @@
                      update-one!
                      update!
                      delete!)
+
+	 insert-or-update-one!
 
          has-many
          has-one
@@ -97,13 +99,45 @@
      statements ...
      (dump-cache-to-models)))
 
+(define (insert-or-update-one! x)
+  ;Used for importing unsafe versions of models, so
+  ;  if you use get-type on an unsafe x, you'll get the unsafe-name (unsafe-course, e.g.)
+  ;Remember that if you're adding logic here to clean up the try/catch grossness
+  (with-handlers ([exn:fail? (thunk*
+			       (displayln "Couldn't insert. Replacing.")
+			       (define ut (get-type x))
+			       (define t (string->symbol
+					   (string-replace
+					     (~a ut) 
+					     "unsafe-" ""))) 
+
+			       (define finder-name
+				 (string->symbol
+				   (~a "find-" t "-by-id")))
+
+			       (define finder (dynamic-find-base-function finder-name))
+
+			       (define real-x (finder (get x 'id)))
+			       (delete-one! (conn) real-x)
+			       (insert-one! (conn) x)
+			       )])
+		 (displayln "Trying to insert")
+
+		 (insert-one! (conn) x)))
 
 ;query-cache is a hash from function names, like 'course->meetings and an input model (stored as an id) or a one like 'find-courses-by-name and "bob", to models or lists of models (stored as actual values)
 ;  We can just grab/map over all the cached values, ignoring inputs.
 (define (dump-cache-to-models)
   (define vs (hash-values query-cache))
 
-  (flatten vs))
+  (remove-duplicates 
+    (filter identity (flatten vs))
+    (lambda (x y)
+      (and 
+        (= (get x 'id)
+	   (get y 'id))	
+	(eq? (get-type x)
+	     (get-type y))))))
 
 (define (reset-query-cache)
   (set! query-cache (make-hash)))
@@ -374,6 +408,18 @@
   (local-require racket/string)
   (string-replace (~a s) "-" "_"))
 
+(define (serialize-value v)
+  (local-require gregor gregor/time)
+  (cond 
+    [(time? v) 
+     `(iso8601->time ,(~s (time->iso8601 v)))]
+    [(date? v) 
+     `(iso8601->date ,(~s (date->iso8601 v)))]
+    [(moment? v) 
+     `(iso8601->moment ,(~s (moment->iso8601 v)))]
+    [else 
+      (~v v)]))
+
 (define-syntax (my-define-schema stx)
   (syntax-parse stx
     [(_ name ([id-field id-field-things ...] [field-name field-things ...] ...))  
@@ -498,7 +544,7 @@
 		    (flatten
 		      (list
 			(list (~a "#:" 'field-name)
-			      (~v (get x 'field-name)) ;Serialize this: moments -> constructors...
+			      (~a (serialize-value (get x 'field-name))) ;For handling db vals like moments, dates, etc.  Might need to pass in field type info (field-things)...
 			      )
 			...)))
 		    " ")
