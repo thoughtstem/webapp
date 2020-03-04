@@ -39,6 +39,8 @@
 
 	 with-read-only-database
 
+	 dumping-cached-models
+
 	 (all-from-out 
 	   webapp/models/util/reflection))
 
@@ -88,6 +90,20 @@
      (reset-query-cache)
      ;(displayln "with-query-cache as non parameter / caching enabled.......")
      statements ...))
+
+(define-syntax-rule (dumping-cached-models statements ...)
+   (begin
+     (reset-query-cache)
+     statements ...
+     (dump-cache-to-models)))
+
+
+;query-cache is a hash from function names, like 'course->meetings and an input model (stored as an id) or a one like 'find-courses-by-name and "bob", to models or lists of models (stored as actual values)
+;  We can just grab/map over all the cached values, ignoring inputs.
+(define (dump-cache-to-models)
+  (define vs (hash-values query-cache))
+
+  (flatten vs))
 
 (define (reset-query-cache)
   (set! query-cache (make-hash)))
@@ -360,7 +376,15 @@
 
 (define-syntax (my-define-schema stx)
   (syntax-parse stx
-    [(_ name ([field-name field-things ...] ...))  
+    [(_ name ([id-field id-field-things ...] [field-name field-things ...] ...))  
+
+     (define unsafe-name
+       (format-id #'name "unsafe-~a"
+                  (syntax-e #'name)))
+
+     (define export-name
+       (format-id #'name "export-~a"
+                  (syntax-e #'name)))
 
      (define name-fields
        (format-id #'name "~a-fields"
@@ -447,21 +471,52 @@
 			(if (empty? l) #f (first l))))))
 
      #`(begin
-         (define-schema name
-                        #:table #,(sqlify plural-name)
-                        ([field-name field-things ...] ...)) 
+	 (provide (schema-out name)
+		  (schema-out #,unsafe-name)
+		  #,export-name)
+	 (define-schema name
+			#:table #,(sqlify plural-name)
+			([id-field id-field-things ...]
+			 [field-name field-things ...] 
+			 ...)) 
+
+	 (define-schema #,unsafe-name
+			#:table #,(sqlify plural-name)
+			([id-field id/f]
+			 [field-name field-things ...] 
+			 ...)) 
+
+	 (define (#,export-name x)
+	   (~a
+	     "(" (string->symbol
+		   (~a "make-" '#,unsafe-name))
+	     " "
+	     (~a "#:" 'id-field) " " (get x 'id)
+	     " "
+	     (string-join
+	       (map ~a
+		    (flatten
+		      (list
+			(list (~a "#:" 'field-name)
+			      (~v (get x 'field-name)) ;Serialize this: moments -> constructors...
+			      )
+			...)))
+		    " ")
+	     
+	     ")"))
 
          (module+ schema-info
            (provide schema-info) 
 
            (define schema-info
              '(name
-                ([field-name field-things ...] ...))))
+                ([id-field id-field-things ...]
+		 [field-name field-things ...] ...))))
 
          (provide #,name-fields)
 
          (define (#,name-fields)
-           '(field-name ...))
+           '(id-field field-name ...))
          
          (provide #,reload-name)
 
@@ -513,7 +568,7 @@
          (define (#,search-for-names ps)
 	   (#,search-for-names-base ps))
 
-         #,@(map create-finders (syntax->datum #'(field-name ...)))
+         #,@(map create-finders (syntax->datum #'(id-field field-name ...)))
 
          )]))
 
