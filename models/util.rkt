@@ -43,6 +43,8 @@
 
 	 dumping-cached-models
 
+	 same-model?
+
 	 (all-from-out 
 	   webapp/models/util/reflection))
 
@@ -132,12 +134,15 @@
 
   (remove-duplicates 
     (filter identity (flatten vs))
-    (lambda (x y)
+    same-model?
+    ))
+
+(define (same-model? x y)
       (and 
         (= (get x 'id)
 	   (get y 'id))	
 	(eq? (get-type x)
-	     (get-type y))))))
+	     (get-type y))))
 
 (define (reset-query-cache)
   (set! query-cache (make-hash)))
