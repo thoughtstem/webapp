@@ -26,7 +26,27 @@
 	       function(){
 	          if(!window.CodeMirror){ //Load it if the include-js above didn't work, which happens if the component is injected after the page loads.  The script tag doesn't run
   
-			  fetch("https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js")
+
+		  var codemirror = document.createElement("script");
+		  codemirror.src = "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js"
+		  codemirror.type= 'text/javascript'
+		  codemirror.onload=function(){
+		    var scheme = document.createElement("script");
+		    scheme.src = "https://codemirror.net/mode/scheme/scheme.js";
+		    scheme.type= 'text/javascript'
+		    scheme.onload = function(){
+		      @(call 'setupEditor)
+		    }
+		    document.head.appendChild(scheme);
+		  }
+		  document.head.appendChild(codemirror);
+
+
+
+
+
+
+/*			  fetch("https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js")
 			  .then((r)=>r.text()).then((t)=>{
 			     eval(t); 
 			     fetch("https://codemirror.net/mode/scheme/scheme.js")
@@ -36,7 +56,7 @@
 				editor = @(call 'setupEditor) 
 			     })
 			  })
-
+*/
 		  } else {
 		    return @(call 'setupEditor)
 		  }
@@ -95,7 +115,7 @@
 
 
 
-
+(require scribble/reader)
 (define (string->component s module-name (wrapper identity))
   (dynamic-require module-name #f)
   (if (not (string-prefix? s "("))
@@ -105,8 +125,6 @@
 			(lambda (e)
 			  (div class: "alert alert-danger"
 			       (p "There was an error with the code.")
-			       #;
-			       (pre s)
 
 			       (div class: "alert alert-warning"
 				    (pre (exn-message e)))))])
@@ -114,6 +132,7 @@
 		     (with-read-only-database
 		       (wrapper
 			 (eval
-			   (read (open-input-string s))
+			   (parameterize ([current-readtable (make-at-readtable)])
+			     (read (open-input-string (string-append "(let () " s ")"))))
 			   (module->namespace
 			     module-name)))))))
