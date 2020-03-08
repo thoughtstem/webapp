@@ -10,7 +10,8 @@
   
   all-models-plural
   all-models-singular
-  )
+
+  exports->list)
 
 (require webapp/environment/util
 	 english
@@ -181,3 +182,19 @@
   (map (compose string->symbol
                 singular)
        (all-models-plural)))
+
+
+(define (exports->list module-path)
+  (dynamic-require module-path #f)
+
+  (define-values (fs macros)
+    (module->exports module-path))
+
+  (map first
+       (rest 
+	 (first fs))) )
+
+
+
+
+

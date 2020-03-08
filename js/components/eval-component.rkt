@@ -41,22 +41,6 @@
 		  }
 		  document.head.appendChild(codemirror);
 
-
-
-
-
-
-/*			  fetch("https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js")
-			  .then((r)=>r.text()).then((t)=>{
-			     eval(t); 
-			     fetch("https://codemirror.net/mode/scheme/scheme.js")
-			     .then((r)=>r.text()).then((t)=>{
-			        console.log("Got scheme mode")
-				eval(t); 
-				editor = @(call 'setupEditor) 
-			     })
-			  })
-*/
 		  } else {
 		    return @(call 'setupEditor)
 		  }
@@ -118,7 +102,8 @@
 (require scribble/reader)
 (define (string->component s module-name (wrapper identity))
   (dynamic-require module-name #f)
-  (if (not (string-prefix? s "("))
+  (if (and (not (string-prefix? s "("))
+	   (not (string-prefix? s "@")))
       (div s)
       ;Otherwise, try to read it as code:
       (with-handlers ([exn:fail? 
