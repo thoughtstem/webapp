@@ -65,11 +65,14 @@
 (define (eval-component text-value
                         edit-function
                         module-name
+			#:eval? (eval? #t)
 			#:wrapper (wrapper (lambda (x) x))
                         #:pre-content (pre-content #f))
 
   (define rendered-value
-    (string->component text-value module-name wrapper))
+    (if eval? 
+	(string->component text-value module-name wrapper)
+	"[Non-eval mode on]"))
 
 
   (enclose
@@ -90,7 +93,9 @@
          (js/call
 	   (lambda (val)
 	     (edit-function val)
-	     (string->component val module-name wrapper))
+	     (if eval?
+		 (string->component val module-name wrapper)
+		 ""))
 	   val
 	   #:then (callback 'updateUI)))
        
@@ -121,3 +126,4 @@
 			     (read (open-input-string (string-append "(let () " s ")"))))
 			   (module->namespace
 			     module-name)))))))
+
