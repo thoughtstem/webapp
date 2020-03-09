@@ -46,7 +46,8 @@
 	 same-model?
 
 	 (all-from-out 
-	   webapp/models/util/reflection))
+	   webapp/models/util/reflection)
+	 doc)
 
 (require webapp/environment/util
 	 webapp/models/util/reflection
@@ -61,6 +62,12 @@
          file/glob
          (only-in db query-exec))
 
+(define-syntax-rule (doc function-name info)
+(module+ docs
+	 (require webapp/js)
+	 (provide function-name)
+	 (define function-name
+	   info)))
 
 (define read-only (make-parameter #f))
 
