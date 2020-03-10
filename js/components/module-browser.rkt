@@ -1,12 +1,61 @@
 #lang at-exp web-server
 
-(provide module-browser)
+(provide module-browser
+	 module-tree)
 
 (require webapp/js
 	 webapp/js/components/util
+	 webapp/js/components/graph
 	 webapp/models/util
 	 webapp/server/client-communication
 	 json)
+
+(define edge  (lambda (a b)
+		(list a b)))
+(define (nodes->edges ns) 
+
+  
+  (define neighbors-1 (map imports->list ns))
+  
+   (apply append  (map (lambda (from tos)  
+			 (map (curry edge from) tos))
+		       ns
+		       neighbors-1))
+  
+  )
+
+
+(define (module-tree start-module-path #:with-prefixes (with-prefixes (list )))
+  (local-require graph)
+  
+  (define es-1 
+    (nodes->edges (cons start-module-path
+		(filter
+		  (curryr has-prefix-in? with-prefixes)
+		(imports->list start-module-path)))))
+  
+  
+  (layout (cose-layout))
+  (graph-component
+    (unweighted-graph/directed  es-1)
+    ))
+
+(define module-path->symbol
+  (compose
+    string->symbol
+    (lambda (x) 
+      (regexp-replaces x
+		       '([#rx".rkt" ""]
+			 [#rx"\"" ""]
+			 [#rx"^/" ""])))
+
+    ~a	
+    module-path-index-resolve))
+
+(define (imports->list module-path)
+  (define ret (rest (first (module->imports module-path))))
+
+  (map module-path->symbol ret))
 
 (define (module-browser module-path #:with-prefixes (with-prefixes '()))
   (card
@@ -14,32 +63,33 @@
     (card-body 
       (card-text
 	(click-to-expand  
-	  (badge-pill-warning "View " module-path " imports.") 
+	  (badge-pill-warning 
+	    (badge-pill-info 
+	      (length 
+		(filter
+		  (curryr has-prefix-in? with-prefixes)
+		  (imports->list module-path))))
+	    "View " module-path " imports.") 
 	  (lambda () (module-imports-list module-path #:with-prefixes with-prefixes)))
 	(click-to-expand 
-	  (badge-pill-warning "View " module-path " exports.") 
+	  (badge-pill-warning 
+	    (badge-pill-info 
+	      (length 
+		(filter-not lifted-function-name?
+			    (exports->list module-path))))
+	    "View " module-path " exports.") 
 	  (lambda () (module-exports-list module-path)))))))
 
 
+(define (has-prefix-in? i ps)
+  (member (first (string-split (~a i) "/")) ps string=?))
 
 (define (module-imports-list module-path #:with-prefixes with-prefixes)
   (define imports 
-    (map
-      (compose
-	string->symbol
-	(lambda (x) 
-	  (regexp-replaces x
-			   '([#rx".rkt" ""]
-			     [#rx"\"" ""]
-			     [#rx"^/" ""])))
-
-	~a	
-	module-path-index-resolve)
-      (rest (first (module->imports module-path)))))
+    (imports->list module-path))
   (define filtered-imports 
     (filter
-      (lambda (i) 
-	(member (first (string-split (~a i) "/")) with-prefixes string=?))
+      (curryr has-prefix-in? with-prefixes)
       imports))
   (let ()
     (map (compose li
@@ -48,17 +98,19 @@
 		      (badge-pill-warning "Browse: " x) 
 		      (lambda () (with-handlers 
 			([exn:fail? (thunk* "failed to render module-browser")])
-			(module-browser x)))))
+			(module-browser x #:with-prefixes with-prefixes)))))
 		  )
 	filtered-imports)
     ))
 
+(define (lifted-function-name? x)
+  (string-prefix? (~a x) "lifted/"))
 
 (define (module-exports-list module-path)
   (define e 
-    (filter-not (lambda (x) (string-prefix? (~a x) "lifted/"))
+    (filter-not lifted-function-name?
       (exports->list module-path)))
-  (ul (map (compose li (curry explore-identifier module-path))
+  (ol (map (compose li (curry explore-identifier module-path))
 	   e)))
 
 
@@ -72,6 +124,25 @@
 (define (identifier-details module-path identifier) 
   (local-require syntax/modresolve)
   (local-require lang-file/read-lang-file)
+
+  (define-values (exp-fs exp-ms)
+    (module->exports module-path))
+
+  (define id-info 
+    (filter 
+      (lambda (info)
+	(eq? identifier (first info)))
+      (rest (first exp-fs))))
+
+  (define defining-modules-info
+    (and (not (empty? id-info))
+	 (rest (first id-info))))
+
+  (define defining-module-info
+    (and defining-modules-info
+	 (first defining-modules-info)))
+
+
   (define s (file->string
 	      (resolve-module-path module-path)))
   (define file-syntax (read-lang-file (resolve-module-path module-path)))
@@ -80,11 +151,13 @@
     (with-handlers 
       ([exn:fail? (lambda (e) "No docs")])
       (dynamic-require `(submod ,module-path docs) identifier)))
-  (list
-    docs
-    (hr)
-    (pre
-     definition)))
+  
+  (if (and defining-module-info (not (empty? defining-module-info)))
+      (div (map (compose module-browser module-path->symbol) defining-module-info))
+      (list
+	docs
+	(hr)
+	(pre definition))))
 
 (define (find-definition identifier file-syntax)
  (local-require syntax/to-string)

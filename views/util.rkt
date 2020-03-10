@@ -1,20 +1,20 @@
 #lang racket
 
 (provide back-to-index
-         basic-index-table
-         basic-show-table
-         chip)
+	 basic-index-table
+	 basic-show-table
+	 chip)
 
 (require (except-in website/bootstrap select)
-         webapp/models/util
-         english)
+	 webapp/models/util
+	 english)
 
 (define (back-to-index model-name)
- (a href: (~a "/" (plural model-name))
-       (button-link 
-         (~a "View All "
-             (string-titlecase
-               (plural model-name))))))
+  (a href: (~a "/" (plural model-name))
+     (button-link 
+       (~a "View All "
+	   (string-titlecase
+	     (plural model-name))))))
 
 (define (chip url content)
   (a href: url
@@ -23,10 +23,10 @@
 
 
 (define (basic-index-table models
-                           #:renderers (renderers (hash)))
+			   #:renderers (renderers (hash)))
 
   (cond [(empty? models) (div "No data")]
-        [else
+	[else
 	  (define model-name (get-type (first models)))
 	  (define fields (get-fields (first models)))
 
@@ -51,16 +51,16 @@
 		 (get-values m)))
 
 	  (div class: "w-100 p-3 mx-auto"
-	    (card
-	      (table class: "table"
-		     (thead
-		       (tr
-			 (map (curry th 'scope: "col")
-			      fields)))
+	       (card
+		 (table class: "table"
+			(thead
+			  (tr
+			    (map (curry th 'scope: "col")
+				 fields)))
 
-		     (tbody
-		       (map (compose tr fields->tds) 
-			    models)))))
+			(tbody
+			  (map (compose tr fields->tds) 
+			       models)))))
 	  ]))
 
 (define (basic-show-table model
@@ -76,11 +76,11 @@
 
   (div
     (table class: "table"
-           (thead 
-             (tr (td "Field")
-                 (td "Value")))
-           (tbody
-             (map my-row fields values)))) )
+	   (thead 
+	     (tr (td "Field")
+		 (td "Value")))
+	   (tbody
+	     (map my-row fields values)))) )
 
 
 

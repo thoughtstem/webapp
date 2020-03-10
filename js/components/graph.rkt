@@ -1,9 +1,18 @@
 #lang at-exp web-server
 
+;TODO: This component still breaks on injections into a note.
+;  If the js is loaded beforehand it works, but if not... white screen.
+
 (provide graph-component
 	 graph-editor-component
 	 node->xy
-	 on-dragfreeon)
+	 node->id
+	 on-dragfreeon
+	 
+	 layout
+	 cose-layout
+	 preset-layout
+	 )
 
 (require webapp/js
          webapp/models/util
@@ -16,6 +25,35 @@
 (define color2 (make-parameter "orange"))
 
 (define on-dragfreeon (make-parameter #f))
+
+
+
+
+(define (cose-layout)
+  @js{
+  layout: {
+   name: 'cose',
+   nodeDimensionsIncludeLabels: true,
+   fit: false,
+   padding: 5,
+   nestingFactor: 5.0,
+   nodeRepulsion: 4096,
+   nodeOverlap: 100,
+   idealEdgeLength: 100,
+   randomize: false,
+   edgeElasticity: 128,
+   }
+  })
+
+(define (preset-layout)
+  @js{
+  layout: {
+   name: 'preset',
+  }})
+
+(define layout
+  (make-parameter
+    (preset-layout)))
 
 ;Incomplete, but would provide hooks into graph-component that could be propagated out to other components that are basically re-renderings/re-compilings of a graph data structure.
 (define (graph-editor-component g)
@@ -120,24 +158,8 @@
    ]
    },
 
-   /*
-  layout: {
-   name: 'cose',
-   nodeDimensionsIncludeLabels: true,
-   fit: false,
-   padding: 5,
-   nestingFactor: 5.0,
-   nodeRepulsion: 4096,
-   nodeOverlap: 100,
-   idealEdgeLength: 100,
-   randomize: false,
-   edgeElasticity: 128,
-   },
-   */
 
-   layout: {
-     name: 'preset',
-   },
+   @(layout),
 
   wheelSensitivity: 0.2
 
