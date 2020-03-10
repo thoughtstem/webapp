@@ -1,17 +1,42 @@
 #lang at-exp web-server
 
 (provide graph-component
-	 node->xy)
+	 graph-editor-component
+	 node->xy
+	 on-dragfreeon)
 
 (require webapp/js
          webapp/models/util
          webapp/server/client-communication
 	 graph)
 
+
+;Do these need to be web parameters??
 (define color1 (make-parameter "black"))
 (define color2 (make-parameter "orange"))
 
-(define (graph-component g)
+(define on-dragfreeon (make-parameter #f))
+
+;Incomplete, but would provide hooks into graph-component that could be propagated out to other components that are basically re-renderings/re-compilings of a graph data structure.
+(define (graph-editor-component g)
+  ;Proof of concept. TODO: Pass back the full graph structure on each callback to server?
+  ;  Otherwise, have to shadow it here...
+  (parameterize ([on-dragfreeon 
+		   (lambda (n x y) 
+		     (displayln "Node dropped!")
+		     (div n ": " x ", " y))])
+  (enclose
+    (div
+      (span id: (ns "output"))
+      (graph-component g
+		       #:on-dragfreeon (callback 'handleOnDragfreeon)))
+    (script ([output (ns "output") ])
+	    (function (handleOnDragfreeon newUI)
+	      (js-inject output newUI))
+	    ))))
+
+(define (graph-component g
+			 #:on-dragfreeon (js-on-dragfreeon noop))
 
   (enclose
     (div
@@ -118,6 +143,20 @@
 
   });
    
+
+  @(if (on-dragfreeon)
+       @js{
+         cy.on('dragfreeon', 'node', function(evt){
+	       @(js/call
+	 	  (on-dragfreeon)
+		  @js{evt.target.id()}
+		  @js{evt.target.position().x}
+		  @js{evt.target.position().y}
+		  #:then js-on-dragfreeon)
+         })
+       }
+
+       @js{})
 }
 )))
   )
