@@ -1,18 +1,12 @@
 #lang at-exp web-server
 
+;TODO: Refactor this to use webapp/js/components/graph
 (provide cytoscape-overview
 	 relation->models
 	 get-all-models)
 
 (require webapp/js
 	 english)
-
-#;
-(define all-relations (apply hash-union
-			     (map get-relations-hash model-list)))
-#;
-(define all-models (get-all-models all-relations #:mode model-mode))
-
 
 (define (cytoscape-overview all-models all-relations [color1 "black"] [color2 "gray"])
   (local-require racket/hash)
