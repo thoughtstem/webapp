@@ -9,6 +9,7 @@
          webapp/models/util
          webapp/server/client-communication)
 
+
 (define (editor-component initial-value
 			  #:on-change (on-change #f))
   (enclose
@@ -27,6 +28,12 @@
 	          if(!window.CodeMirror){ //Load it if the include-js above didn't work, which happens if the component is injected after the page loads.  The script tag doesn't run
   
 
+		  @(late-include-js "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js"
+				    (late-include-js
+				      "https://codemirror.net/mode/scheme/scheme.js"
+				      (call 'setupEditor)))
+
+		  /*
 		  var codemirror = document.createElement("script");
 		  codemirror.src = "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js"
 		  codemirror.type= 'text/javascript'
@@ -40,6 +47,7 @@
 		    document.head.appendChild(scheme);
 		  }
 		  document.head.appendChild(codemirror);
+		  */
 
 		  } else {
 		    return @(call 'setupEditor)

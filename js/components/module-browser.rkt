@@ -10,35 +10,40 @@
 	 webapp/server/client-communication
 	 json)
 
-(define edge  (lambda (a b)
-		(list a b)))
-(define (nodes->edges ns) 
 
-  
+(define import-prefixes (make-parameter '()))
+(define edge  (lambda (a b)
+		(list b a)))
+
+(define (nodes->edges ns) 
   (define neighbors-1 (map imports->list ns))
   
    (apply append  (map (lambda (from tos)  
 			 (map (curry edge from) tos))
 		       ns
-		       neighbors-1))
-  
-  )
+		       neighbors-1)) )
 
+(define (module->neighbors module-path depth )
+  (remove-duplicates
+    (flatten 
+      (if (= depth 0)
+	  (cons module-path (imports->list module-path))
+	  (cons module-path
+		(map imports->list 
+		     (module->neighbors module-path (- depth 1) )))))))
 
-(define (module-tree start-module-path #:with-prefixes (with-prefixes (list )))
+(define (module-tree start-module-path #:depth (depth 1)
+		     #:with-prefixes (with-prefixes (list )))
   (local-require graph)
-  
-  (define es-1 
-    (nodes->edges (cons start-module-path
-		(filter
-		  (curryr has-prefix-in? with-prefixes)
-		(imports->list start-module-path)))))
-  
-  
-  (layout (cose-layout))
-  (graph-component
-    (unweighted-graph/directed  es-1)
-    ))
+
+  (parameterize ([import-prefixes with-prefixes])
+    (define neighbors (module->neighbors start-module-path depth ))
+    (define es-1 
+      (nodes->edges neighbors))
+
+    (layout (dagre-layout))
+    (graph-component
+      (unweighted-graph/directed  es-1))))
 
 (define module-path->symbol
   (compose
@@ -53,9 +58,13 @@
     module-path-index-resolve))
 
 (define (imports->list module-path)
-  (define ret (rest (first (module->imports module-path))))
+  (dynamic-require module-path #f)
+  (define ret 
+    (rest (first (module->imports module-path))))
 
-  (map module-path->symbol ret))
+  (filter
+    (curryr has-prefix-in? (import-prefixes))
+    (map module-path->symbol ret)))
 
 (define (module-browser module-path #:with-prefixes (with-prefixes '()))
   (card
@@ -82,7 +91,18 @@
 
 
 (define (has-prefix-in? i ps)
-  (member (first (string-split (~a i) "/")) ps string=?))
+  (member (first (string-split (~a i) "/")) ps string=?)
+  
+  
+  (foldl
+    (lambda (p b)
+      (or b
+	  (string-prefix? 
+	     (~a i)
+	     p))) 
+    #f
+    ps)
+  )
 
 (define (module-imports-list module-path #:with-prefixes with-prefixes)
   (define imports 

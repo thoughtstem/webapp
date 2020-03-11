@@ -12,6 +12,7 @@
 	 layout
 	 cose-layout
 	 preset-layout
+	 dagre-layout
 	 )
 
 (require webapp/js
@@ -51,6 +52,17 @@
    name: 'preset',
   }})
 
+(define (dagre-layout)
+  @js{
+  layout: {
+   name: 'dagre',
+   ranker: 'longest-path',
+   rankDir: 'BT'
+   // 'network-simplex' 
+   //'tight-tree'
+   // spacingFactor: 2
+  }})
+
 (define layout
   (make-parameter
     (preset-layout)))
@@ -79,107 +91,123 @@
   (enclose
     (div
       (include-js "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.14.0/cytoscape.min.js")
+      (include-js "https://unpkg.com/dagre@0.7.4/dist/dagre.js")
+      (include-js "https://cytoscape.org/cytoscape.js-dagre/cytoscape-dagre.js")
       (div id: (ns "cytoscape")
            class: "d-block border border-secondary w-100 my-3"
 	   style: (properties height: 720)))
     (script ([cytoscape (ns "cytoscape")]
-	     ;TODO: Support late-load/injection...
-             [dummy (call 'construct)])
+             [dummy 
+	       @js{
+	       function(){
+	       if(window.cytoscape){
+	         @(call 'construct)
+	       }else{
+	         @(late-include-js "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.14.0/cytoscape.min.js" 
+		   (late-include-js "https://unpkg.com/dagre@0.7.4/dist/dagre.js"
+		     (late-include-js "https://cytoscape.org/cytoscape.js-dagre/cytoscape-dagre.js"
+                      @js{
+		        @(call 'construct)
+		      })))        
+	       }
+	       }()
+	      }])
             (function (construct)
                       @js{
- var cy = cytoscape({
+		        console.log("CONSTRUCT") 
+		      var cy = cytoscape({
 
-  container: @getEl{@cytoscape}, // container to render in
+					  container: @getEl{@cytoscape}, // container to render in
 
-  boxSelectionEnabled: false,
+					  boxSelectionEnabled: false,
 
-  style: [
-  {
-   selector: 'node',
-   css: {
-    'shape': 'round-rectangle',
-    'content': 'data(id)',
-    'text-valign': 'center',
-    'text-halign': 'center'
-   }
-   },
-  {
-   selector: ':parent',
-   css: {
-    'text-valign': 'top',
-    'text-halign': 'center',
-   }
-   },
-  {
-   selector: 'edge[label]',
-   css: {
-    'curve-style': 'bezier',
-    'target-arrow-shape': 'triangle',
-    'label': 'data(label)'
-   }
-   },
-  {
-   "selector": ".autorotate",
-   "style": {
-    "edge-text-rotation": "autorotate"
-   }
-   },
-  {
-   "selector": ".outline",
-   "style": {
-    "color": "#fff",
-    "text-outline-color": "#888",
-    "text-outline-width": 2
-   }
-   },
-  {
-   "selector": ".color1",
-   "style": {
-    "text-outline-color": "@(color1)",
-   }
-   },
-  {
-   "selector": ".color2",
-   "style": {
-    "text-outline-color": "@(color2)",
-   }
-  }
-  ],
+					  style: [
+						  {
+						  selector: 'node',
+						  css: {
+						  'shape': 'round-rectangle',
+						  'content': 'data(id)',
+						  'text-valign': 'center',
+						  'text-halign': 'center'
+						  }
+						  },
+						  {
+						  selector: ':parent',
+						  css: {
+						  'text-valign': 'top',
+						  'text-halign': 'center',
+						  }
+						  },
+						  {
+						  selector: 'edge[label]',
+						  css: {
+						  'curve-style': 'bezier',
+						  'target-arrow-shape': 'triangle',
+						  'label': 'data(label)'
+						  }
+						  },
+						  {
+						  "selector": ".autorotate",
+						  "style": {
+						  "edge-text-rotation": "autorotate"
+						  }
+						  },
+						  {
+						  "selector": ".outline",
+						  "style": {
+						  "color": "#fff",
+						  "text-outline-color": "#888",
+						  "text-outline-width": 2
+						  }
+						  },
+						  {
+						  "selector": ".color1",
+						  "style": {
+						  "text-outline-color": "@(color1)",
+						  }
+						  },
+						  {
+						  "selector": ".color2",
+						  "style": {
+						  "text-outline-color": "@(color2)",
+						  }
+						  }
+						  ],
 
-  elements: {
-   nodes: [
-     @(string-join (map node->cyto-node (get-vertices g)) ",\n")
-	  	  
-   ],
-   edges: [
-     @(string-join (map edge->cyto-edge
-			(get-edges g)) ",\n")
-     
-   ]
-   },
+					  elements: {
+					  nodes: [
+						  @(string-join (map node->cyto-node (get-vertices g)) ",\n")
+
+						  ],
+					  edges: [
+						  @(string-join (map edge->cyto-edge
+								     (get-edges g)) ",\n")
+
+						  ]
+					  },
 
 
-   @(layout),
+					  @(layout),
 
-  wheelSensitivity: 0.2
+					  wheelSensitivity: 0.2
 
-  });
-   
+					  });
 
-  @(if (on-dragfreeon)
-       @js{
-         cy.on('dragfreeon', 'node', function(evt){
-	       @(js/call
-	 	  (on-dragfreeon)
-		  @js{evt.target.id()}
-		  @js{evt.target.position().x}
-		  @js{evt.target.position().y}
-		  #:then js-on-dragfreeon)
-         })
-       }
 
-       @js{})
-}
+		      @(if (on-dragfreeon)
+			   @js{
+			   cy.on('dragfreeon', 'node', function(evt){
+				 @(js/call
+				    (on-dragfreeon)
+				    @js{evt.target.id()}
+				    @js{evt.target.position().x}
+				    @js{evt.target.position().y}
+				    #:then js-on-dragfreeon)
+				 })
+			   }
+
+			   @js{})
+		      }
 )))
   )
 
