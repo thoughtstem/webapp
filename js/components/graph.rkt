@@ -57,10 +57,8 @@
   layout: {
    name: 'dagre',
    ranker: 'longest-path',
-   rankDir: 'BT'
-   // 'network-simplex' 
-   //'tight-tree'
-   // spacingFactor: 2
+   rankDir: 'BT',
+   nodeSep: 150
   }})
 
 (define layout
@@ -233,7 +231,8 @@
 (define node->color
   (make-parameter 
     (lambda (n)
-      "black")))
+      "color1"  ;I don't like this.  Don't provide node->color.  It's not working anyway...
+      )))
 
 (define node->xy
   (make-parameter 

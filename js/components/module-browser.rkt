@@ -33,6 +33,7 @@
 		     (module->neighbors module-path (- depth 1) )))))))
 
 (define (module-tree start-module-path #:depth (depth 1)
+		     #:layout (l (dagre-layout))
 		     #:with-prefixes (with-prefixes (list )))
   (local-require graph)
 
@@ -41,9 +42,17 @@
     (define es-1 
       (nodes->edges neighbors))
 
-    (layout (dagre-layout))
+    (layout l)
+    (node->id (lambda (n) 
+		(regexp-replaces 
+		  (~a n)
+		  (map 
+                    (lambda (p)
+		      `[,p ""]) 
+		    (import-prefixes)))
+		))
     (graph-component
-      (unweighted-graph/directed  es-1))))
+      (unweighted-graph/directed es-1))))
 
 (define module-path->symbol
   (compose
@@ -67,27 +76,26 @@
     (map module-path->symbol ret)))
 
 (define (module-browser module-path #:with-prefixes (with-prefixes '()))
-  (card
-    (card-header "Browsing module path: " module-path)
-    (card-body 
-      (card-text
-	(click-to-expand  
-	  (badge-pill-warning 
-	    (badge-pill-info 
-	      (length 
-		(filter
-		  (curryr has-prefix-in? with-prefixes)
-		  (imports->list module-path))))
-	    "View " module-path " imports.") 
-	  (lambda () (module-imports-list module-path #:with-prefixes with-prefixes)))
-	(click-to-expand 
-	  (badge-pill-warning 
-	    (badge-pill-info 
-	      (length 
-		(filter-not lifted-function-name?
-			    (exports->list module-path))))
-	    "View " module-path " exports.") 
-	  (lambda () (module-exports-list module-path)))))))
+  (parameterize ([import-prefixes with-prefixes])
+    (card
+      (card-header "Browsing module path: " module-path)
+      (card-body 
+	(card-text
+	  (click-to-expand  
+	    (badge-pill-warning 
+	      (badge-pill-info 
+		(length 
+		  (imports->list module-path)))
+	      "View " module-path " imports.") 
+	    (lambda () (module-imports-list module-path #:with-prefixes with-prefixes)))
+	  (click-to-expand 
+	    (badge-pill-warning 
+	      (badge-pill-info 
+		(length 
+		  (filter-not lifted-function-name?
+			      (exports->list module-path))))
+	      "View " module-path " exports.") 
+	    (lambda () (module-exports-list module-path))))))))
 
 
 (define (has-prefix-in? i ps)
@@ -105,23 +113,20 @@
   )
 
 (define (module-imports-list module-path #:with-prefixes with-prefixes)
-  (define imports 
-    (imports->list module-path))
-  (define filtered-imports 
-    (filter
-      (curryr has-prefix-in? with-prefixes)
-      imports))
+  (parameterize ([import-prefixes with-prefixes])
+    (define filtered-imports 
+      (imports->list module-path))
   (let ()
     (map (compose li
 		  (lambda (x) 
 		    (click-to-expand
 		      (badge-pill-warning "Browse: " x) 
 		      (lambda () (with-handlers 
-			([exn:fail? (thunk* "failed to render module-browser")])
-			(module-browser x #:with-prefixes with-prefixes)))))
+				   ([exn:fail? (thunk* "failed to render module-browser")])
+				   (module-browser x #:with-prefixes with-prefixes)))))
 		  )
-	filtered-imports)
-    ))
+	 filtered-imports)
+    )))
 
 (define (lifted-function-name? x)
   (string-prefix? (~a x) "lifted/"))
