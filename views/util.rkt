@@ -2,8 +2,7 @@
 
 (provide back-to-index
 	 basic-index-table
-	 basic-show-table
-	 chip)
+	 basic-show-table)
 
 (require (except-in website/bootstrap select)
 	 webapp/models/util
@@ -15,11 +14,6 @@
        (~a "View All "
 	   (string-titlecase
 	     (plural model-name))))))
-
-(define (chip url content)
-  (a href: url
-     (badge-pill-info 
-       content)))
 
 
 (define (basic-index-table models

@@ -73,6 +73,6 @@
 
 (define (js/call-hash f h #:then (then (const "")))
   (js-fetch "GET"
-	    (js-url/stateless/call-hash f)
+	    (js-url/stateless/call-hash f h)
 	    #:then then))
 
