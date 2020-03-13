@@ -11,7 +11,9 @@
   all-models-plural
   all-models-singular
 
-  exports->list)
+  exports->list
+  
+  relations-graph)
 
 (require webapp/environment/util
 	 english
@@ -23,7 +25,9 @@
                      racket/format)
          syntax/parse/define
          file/glob
-         (only-in db query-exec))
+         (only-in db query-exec)
+	 graph
+	 )
 
 
 (define (get-type model)
@@ -195,6 +199,28 @@
 	 (first fs))) )
 
 
+
+
+
+(define (relations-graph (model-names (all-models-plural)))
+  (define g 
+    (weighted-graph/directed '()))
+    
+  (for ([m model-names]) 
+    (add-vertex! g m) )
+  
+  ;Now add the edges...
+  (for ([m model-names]) 
+       (define rels (model-name->relations-hash m))
+       (for ([rel-func-name (hash-keys rels)])
+	    (define rel-type (hash-ref rels rel-func-name))
+	    (define t 
+	      (if (eq? rel-type 'has-many)
+		  (second (string-split (~a rel-func-name) "->"))
+		  (plural (second (string-split (~a rel-func-name) "->")))))
+	    (add-directed-edge! g m t rel-type) ))
+  
+  g)
 
 
 
