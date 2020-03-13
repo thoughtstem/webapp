@@ -81,6 +81,11 @@
       (card-header "Browsing module path: " module-path)
       (card-body 
 	(card-text
+	  (click-to-expand
+            (badge-pill-warning "View source file")
+	    (lambda ()
+	      (module-file-browser 
+		module-path)))
 	  (click-to-expand  
 	    (badge-pill-warning 
 	      (badge-pill-info 
@@ -214,3 +219,15 @@
          ")" )
 	"Could not find definition")
   )
+
+
+(define (module-file-browser module-path)
+  (local-require syntax/modresolve)
+  (code
+    (pre
+      (file->string 
+	(resolve-module-path module-path)))))
+
+
+
+
