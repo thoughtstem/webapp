@@ -7,6 +7,7 @@
 	 graph-editor-component
 	 node->xy
 	 node->id
+	 node->color
 	 on-dragfreeon
 	 
 	 layout

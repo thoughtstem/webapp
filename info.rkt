@@ -3,7 +3,7 @@
 (define deps '("base"
                "deta"
                "north"
-               ;"raart"
+               "lang-file"
 	       "graph"
                "ansi-color"
                "https://github.com/thoughtstem/website.git"
