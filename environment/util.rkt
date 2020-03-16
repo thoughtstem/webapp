@@ -10,6 +10,7 @@
          db-name
          db-user
          db-password
+         db-notification-handler
          load-current-env!
          
          get-cid
@@ -88,17 +89,28 @@
   (~a (no-dashes (app-name))
       "_" (env)))
 
+(define db-notification-handler (make-parameter #f))
+
 (define last-connection #f)
 
 (define (conn)
   (when (not last-connection)
     (set! last-connection
       (with-handlers ([exn:fail? (thunk*
-				   (postgresql-connect
-				     #:server   (db-host)
-				     #:user     (db-user) 
-				     #:database (db-name)
-				     #:password (db-password) )
+				   (displayln "Postgres connect! ")
+				   (displayln (db-notification-handler))
+				   (if (db-notification-handler)
+				       (postgresql-connect
+					 #:server   (db-host)
+					 #:user     (db-user) 
+					 #:database (db-name)
+					 #:password (db-password) 
+					 #:notification-handler (db-notification-handler))
+				       (postgresql-connect
+					 #:server   (db-host)
+					 #:user     (db-user) 
+					 #:database (db-name)
+					 #:password (db-password) ))
 				   )])
 		     (sqlite3-connect
 		       #:database (~a "/" (pkg-name) "/data.sqlite")))))
