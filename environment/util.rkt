@@ -21,7 +21,9 @@
 	 
 	 load-dev-prefs!
 	 host-port
-	 docker-image-name)
+	 docker-image-name
+	 
+	 fresh-connection?)
 
 (require db file/glob)
 
@@ -90,33 +92,37 @@
       "_" (env)))
 
 (define db-notification-handler (make-parameter #f))
+(define fresh-connection? (make-parameter #f))
 
 (define last-connection #f)
 
 (define (conn)
-  (when (not last-connection)
-    (set! last-connection
-      (with-handlers ([exn:fail? (thunk*
-				   (displayln "Postgres connect! ")
-				   (displayln (db-notification-handler))
-				   (if (db-notification-handler)
-				       (postgresql-connect
-					 #:server   (db-host)
-					 #:user     (db-user) 
-					 #:database (db-name)
-					 #:password (db-password) 
-					 #:notification-handler (db-notification-handler))
-				       (postgresql-connect
-					 #:server   (db-host)
-					 #:user     (db-user) 
-					 #:database (db-name)
-					 #:password (db-password) ))
-				   )])
-		     (sqlite3-connect
-		       #:database (~a "/" (pkg-name) "/data.sqlite")))))
+  (if  (fresh-connection?)
+       (get-connection)
+       (or last-connection
+	   (begin
+	     (set! last-connection (get-connection))
+	     last-connection))))
 
-  ;TODO: Pooling and virtual connections.
-  last-connection)
+
+(define (get-connection)
+  (with-handlers ([exn:fail? (thunk*
+			       (displayln "Postgres connect!")
+			       (if (db-notification-handler)
+				   (postgresql-connect
+				     #:server   (db-host)
+				     #:user     (db-user) 
+				     #:database (db-name)
+				     #:password (db-password) 
+				     #:notification-handler (db-notification-handler))
+				   (postgresql-connect
+				     #:server   (db-host)
+				     #:user     (db-user) 
+				     #:database (db-name)
+				     #:password (db-password) ))
+			       )])
+		 (sqlite3-connect
+		   #:database (~a "/" (pkg-name) "/data.sqlite"))))
 
 
 (define (load-current-env!)
