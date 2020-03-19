@@ -155,6 +155,7 @@
 (define (type->db-type t)
   (match t
     ["integer" "integer"] 
+    ["real" "real"]
     ["id" "integer"] 
     ["string" "text"] 
     ["boolean" "boolean"] 
