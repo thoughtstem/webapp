@@ -11,6 +11,7 @@
 
 
 (define (editor-component initial-value
+			  #:editor-enabled? (editor-enabled? #t)
 			  #:on-change (on-change #f))
   (enclose
     (span id: (ns "main")
@@ -33,21 +34,6 @@
 				      "https://codemirror.net/mode/scheme/scheme.js"
 				      (call 'setupEditor)))
 
-		  /*
-		  var codemirror = document.createElement("script");
-		  codemirror.src = "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.32.0/codemirror.min.js"
-		  codemirror.type= 'text/javascript'
-		  codemirror.onload=function(){
-		    var scheme = document.createElement("script");
-		    scheme.src = "https://codemirror.net/mode/scheme/scheme.js";
-		    scheme.type= 'text/javascript'
-		    scheme.onload = function(){
-		      @(call 'setupEditor)
-		    }
-		    document.head.appendChild(scheme);
-		  }
-		  document.head.appendChild(codemirror);
-		  */
 
 		  } else {
 		    return @(call 'setupEditor)
@@ -57,7 +43,13 @@
 
        (function (setupEditor)
          @js{		 
-	  var editor = CodeMirror.fromTextArea(@getEl{@input}, { lineNumbers: true });
+	  var editor = CodeMirror.fromTextArea(@getEl{@input}, 
+						         { lineNumbers: true,
+							   readOnly: @(if editor-enabled?
+									  @js{false}
+									  @js{"nocursor"}
+									  )
+							 });
 
 	  @(if on-change
 	     @js{
@@ -74,6 +66,7 @@
                         edit-function
                         module-name
 			#:eval? (eval? #t)
+			#:editor-enabled? (editor-enabled? #t)
 			#:wrapper (wrapper (lambda (x) x))
                         #:pre-content (pre-content #f))
 
@@ -89,6 +82,7 @@
 	    (card-body
 	      pre-content 
 	      (editor-component text-value
+				#:editor-enabled? editor-enabled? 
 				#:on-change (callback 'rerender))
 
 	      (hr)
