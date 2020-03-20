@@ -108,18 +108,21 @@
 (define (get-connection)
   (with-handlers ([exn:fail? (thunk*
 			       (displayln "Postgres connect!")
-			       (if (db-notification-handler)
-				   (postgresql-connect
-				     #:server   (db-host)
-				     #:user     (db-user) 
-				     #:database (db-name)
-				     #:password (db-password) 
-				     #:notification-handler (db-notification-handler))
-				   (postgresql-connect
-				     #:server   (db-host)
-				     #:user     (db-user) 
-				     #:database (db-name)
-				     #:password (db-password) ))
+			       (virtual-connection
+				 (connection-pool
+				   (lambda ()
+				     (if (db-notification-handler)
+					 (postgresql-connect
+					   #:server   (db-host)
+					   #:user     (db-user) 
+					   #:database (db-name)
+					   #:password (db-password) 
+					   #:notification-handler (db-notification-handler))
+					 (postgresql-connect
+					   #:server   (db-host)
+					   #:user     (db-user) 
+					   #:database (db-name)
+					   #:password (db-password) )))))
 			       )])
 		 (sqlite3-connect
 		   #:database (~a "/" (pkg-name) "/data.sqlite"))))
