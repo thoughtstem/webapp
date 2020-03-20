@@ -22,8 +22,8 @@
 	id: (ns "main")
 	on-click: (call 'expand)
 	style: (properties cursor: "pointer")
-	small-chip)
-      (hr)
+	small-chip (i class: "fas fa-level-down-alt align-bottom"))
+      ;(hr)
       (span id: (ns "expandedArea")))
 
     (script ([main (ns "main")]
