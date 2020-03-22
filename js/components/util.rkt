@@ -1,6 +1,9 @@
 #lang at-exp web-server
 
-(provide click-to-expand)
+(provide click-to-expand
+	 click-to-replace
+	 click-to-call
+	 catch)
 
 (require webapp/js
 	 webapp/models/util
@@ -36,4 +39,67 @@
 
 	    (function (updateUI newUI)
 		      (js-inject expandedArea newUI)) )))
+
+
+
+(define (click-to-replace to-click f)
+
+  (enclose
+    (span
+      (span
+	id: (ns "main")
+	on-click: (call 'act)
+	style: (properties cursor: "pointer")
+	to-click))
+
+    (script ([main (ns "main")])
+
+	    (function (act)
+		      (js/call 
+			(lambda ()
+			  (catch (f)))
+
+			#:then (callback 'updateUI)))
+
+	    (function (updateUI newUI)
+		      (js-inject main newUI)))))
+
+
+(define-syntax-rule (catch statements ...)
+  (with-handlers ([exn:fail? (lambda (e)
+			       (alert-danger
+				 "There was an error"
+				 (alert-warning
+				   (code
+				     (pre
+				       (exn-message e))))))
+			       ])
+		 
+    statements ...))
+
+
+(define (click-to-call to-click f)
+
+  (enclose
+    (span
+      (span
+	id: (ns "main")
+	on-click: (call 'act)
+	style: (properties cursor: "pointer")
+	to-click))
+
+    (script ([main (ns "main")])
+
+	    (function (act)
+		      (js/call 
+			(lambda ()
+			  (catch (f)))
+
+			#:then (callback 'updateUI)))
+
+	    (function (updateUI newUI)
+		      ;Nothing to do here.
+		      ;Confirmation?
+		      ))))
+
 
