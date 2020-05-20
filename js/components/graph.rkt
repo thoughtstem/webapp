@@ -14,12 +14,14 @@
 	 cose-layout
 	 preset-layout
 	 dagre-layout
+	 styles
 	 )
 
 (require webapp/js
          webapp/models/util
          webapp/server/client-communication
-	 graph)
+	 graph
+	 json)
 
 
 (define current-graph (make-parameter #f))
@@ -31,6 +33,7 @@
 (define on-dragfreeon (make-parameter #f))
 
 
+(define styles (make-parameter (hash)))
 
 
 (define (cose-layout)
@@ -130,9 +133,9 @@
 						    'shape': 'round-rectangle',
 						    'content': 'data(id)',
 						    'text-valign': 'center',
-						    'text-halign': 'center'
+						    'text-halign': 'center',
 						    }
-						    },
+						    } ,
 						    {
 						    selector: ':parent',
 						    css: {
@@ -174,7 +177,9 @@
 						    "text-outline-color": "@(color2)",
 						    }
 						    }
-						    ],
+						    ].concat(
+						      @(jsexpr->string (styles))
+						    ),
 
 					    elements: {
 					    nodes: [
