@@ -58,13 +58,14 @@
    name: 'preset',
   }})
 
-(define (dagre-layout)
+(define (dagre-layout 
+	  #:node-distance [node-distance 150])
   @js{
   layout: {
    name: 'dagre',
    ranker: 'longest-path',
    rankDir: 'BT',
-   nodeSep: 150
+   nodeSep: @node-distance
   }})
 
 (define layout
