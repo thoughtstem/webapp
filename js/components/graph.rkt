@@ -7,6 +7,8 @@
 	 graph-editor-component
 	 node->xy
 	 node->id
+	 node->label
+	 edge->label
 	 node->color
 	 on-dragfreeon
 	 
@@ -132,7 +134,7 @@
 						    selector: 'node',
 						    css: {
 						    'shape': 'round-rectangle',
-						    'content': 'data(id)',
+						    'content': 'data(label)',
 						    'text-valign': 'center',
 						    'text-halign': 'center',
 						    }
@@ -225,6 +227,10 @@
     (lambda (n)
       (~a n))))
 
+(define node->label
+  (make-parameter 
+    node->id))
+
 (define edge->id 
   (make-parameter 
     (lambda (e)
@@ -265,8 +271,8 @@
 
 (define (node->cyto-node n)
   @~a{
-      { data: { id: '@((node->id) n)'}, 
-        classes: 'outline @((node->color) n)',
+      { data: { id: '@((node->id) n)', label: '@((node->label) n)'}, 
+        classes: 'outline @((node->color) n) top-left',
 	renderedPosition:{
           x: @(first  ((node->xy) n)),
           y: @(second ((node->xy) n))
