@@ -18,7 +18,7 @@
       (include-js "https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.14.0/cytoscape.min.js")
       (div id: (ns "cytoscape")
            class: "d-block border border-secondary w-100 my-3"
-	   style: (properties height: 720)))
+	   style: (properties height: "100vh")))
     (script ([cytoscape (ns "cytoscape")]
              [dummy (call 'construct)])
             (function (construct)
