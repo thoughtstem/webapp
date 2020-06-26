@@ -93,7 +93,9 @@
 	    ))))
 
 (define (graph-component g
-			 #:on-dragfreeon (js-on-dragfreeon noop))
+			 #:on-dragfreeon (js-on-dragfreeon noop)
+                         #:node-width [node-width 32]
+                         )
 
   (parameterize ([current-graph g])
     (enclose
@@ -133,6 +135,7 @@
 						    {
 						    selector: 'node',
 						    css: {
+                                                    'width': '@node-width',
 						    'shape': 'round-rectangle',
 						    'content': 'data(label)',
 						    'text-valign': 'center',
