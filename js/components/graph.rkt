@@ -10,6 +10,7 @@
 	 node->label
 	 edge->label
 	 node->color
+         node->url
 	 on-dragfreeon
 	 
 	 layout
@@ -17,6 +18,7 @@
 	 preset-layout
 	 dagre-layout
 	 styles
+         
 	 )
 
 (require webapp/js
@@ -36,7 +38,6 @@
 
 
 (define styles (make-parameter (hash)))
-
 
 (define (cose-layout)
   @js{
@@ -205,7 +206,18 @@
 					    wheelSensitivity: 0.2
 
 					    });
-
+                                             
+                        @js{
+			     cy.on('tap', 'node', function(evt){
+                                   if(this.data('href')){
+				     try {
+                                          window.open(this.data('href'));
+                                     } catch(e){
+                                          window.location.href = this.data('href');
+                                     }
+                                   }
+			     });
+                        }
 
 			@(if (on-dragfreeon)
 			     @js{
@@ -250,6 +262,11 @@
 	(first e)
 	(second e)))))
 
+(define node->url
+  (make-parameter
+   (lambda (n)
+     #f)))
+
 (define node->color
   (make-parameter 
     (lambda (n)
@@ -272,9 +289,13 @@
 	}
   })
 
+(define test-link #f)
+
 (define (node->cyto-node n)
   @~a{
-      { data: { id: '@((node->id) n)', label: '@((node->label) n)'}, 
+      { data: { id: '@((node->id) n)', label: '@((node->label) n)' @(if ((node->url) n)
+                                                                        @~a{, href: '@((node->url) n)'}
+                                                                        "")}, 
         classes: 'outline @((node->color) n) top-left',
 	renderedPosition:{
           x: @(first  ((node->xy) n)),
