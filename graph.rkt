@@ -37,7 +37,6 @@
     'content': 'data(id)',
     'text-valign': 'center',
     'text-halign': 'center',
-    'text-wrap' : 'wrap',
    }
    },
   {
