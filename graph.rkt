@@ -36,7 +36,8 @@
     'shape': 'round-rectangle',
     'content': 'data(id)',
     'text-valign': 'center',
-    'text-halign': 'center'
+    'text-halign': 'center',
+    'text-wrap' : 'wrap'
    }
    },
   {
