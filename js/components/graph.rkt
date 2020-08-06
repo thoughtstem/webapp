@@ -96,6 +96,7 @@
 (define (graph-component g
 			 #:on-dragfreeon (js-on-dragfreeon noop)
                          #:node-width [node-width 32]
+			 #:node-height [node-height 32]
                          )
 
   (parameterize ([current-graph g])
@@ -137,7 +138,7 @@
 						    selector: 'node',
 						    css: {
                                                     'width': '@node-width',
-						    'height' : '50',
+						    'height' : '@node-height',
 						    'shape': 'round-rectangle',
 						    'content': 'data(label)',
 						    'text-valign': 'center',
