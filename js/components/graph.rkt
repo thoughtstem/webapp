@@ -137,10 +137,12 @@
 						    selector: 'node',
 						    css: {
                                                     'width': '@node-width',
+						    'height' : '50',
 						    'shape': 'round-rectangle',
 						    'content': 'data(label)',
 						    'text-valign': 'center',
 						    'text-halign': 'center',
+						    'text-wrap' : 'wrap',
 						    }
 						    } ,
 						    {
